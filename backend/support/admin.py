@@ -11,12 +11,13 @@ class TicketAdmin(admin.ModelAdmin):
         'subject_summary',
         'user_display',
         'status',
-        'assigned_to_display',
+        'assigned_to', # Actual field for editing
+        'assigned_to_display', # Keep for custom display if needed, or remove if 'assigned_to' suffices
         'created_at',
         'closed_at'
     )
     list_filter = ('status', 'created_at', 'assigned_to')
-    search_fields = ('subject', 'message', 'user__email', 'assigned_to__email') # Assumes User model has email
+    search_fields = ('subject', 'message', 'user__email', 'assigned_to__email')
 
     # Make user and assigned_to read-only in the detail view if they are set through specific logic/defaults
     # 'user' is typically set on creation and not changed.
@@ -46,9 +47,9 @@ class TicketAdmin(admin.ModelAdmin):
         return obj.user.email if obj.user else 'N/A'
     user_display_readonly.short_description = 'Ticket User'
 
-    def assigned_to_display(self, obj): # For list_display
-        return obj.assigned_to.email if obj.assigned_to else None
-    assigned_to_display.short_description = 'Assigned To (List)'
+    def assigned_to_display(self, obj): # For list_display custom representation
+        return obj.assigned_to.email if obj.assigned_to else None # Or str(obj.assigned_to)
+    assigned_to_display.short_description = 'Assigned To Email (Display)' # Clarify it's for display
 
     def assigned_to_display_readonly_detail(self, obj): # For fieldsets
         return obj.assigned_to.email if obj.assigned_to else 'Not Assigned'
