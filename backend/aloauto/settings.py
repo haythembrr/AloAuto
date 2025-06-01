@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'support',
     'erp',
     'logs',
+    'integrations', # Changed from backend.integrations
 ]
 
 MIDDLEWARE = [
@@ -124,5 +125,13 @@ CORS_ALLOWED_ORIGINS = [
 # Custom user model
 AUTH_USER_MODEL = 'accounts.User'
 
-
-
+# Celery Configuration
+# These are basic settings for local development with Redis.
+# For production, you might use a different broker and configure these more extensively.
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE # Use Django's timezone
+# CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler' # If using django-celery-beat for scheduled tasks
