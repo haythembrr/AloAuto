@@ -26,11 +26,21 @@ class CartSerializer(serializers.ModelSerializer):
 
 class OrderItemSerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)
+    # price_at_purchase = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True) # Ensure it's read-only after creation
 
     class Meta:
         model = OrderItem
-        fields = ['id', 'product', 'quantity', 'unit_price', 'total_price']
-        read_only_fields = ['order', 'unit_price', 'total_price']
+        fields = [
+            'id',
+            'order', # Added to explicitly show it, usually handled by relation
+            'product',
+            'quantity',
+            'unit_price',      # Original field
+            'price_at_purchase', # New field
+            'total_price'
+        ]
+        read_only_fields = ['product', 'unit_price', 'price_at_purchase', 'total_price']
+
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)

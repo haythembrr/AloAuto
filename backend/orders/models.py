@@ -43,5 +43,6 @@ class OrderItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
     quantity = models.PositiveIntegerField()
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    price_at_purchase = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Price of the item at the time of purchase")
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
