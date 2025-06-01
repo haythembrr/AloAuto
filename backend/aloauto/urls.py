@@ -17,4 +17,5 @@ urlpatterns = [
     path('api/shipping/', include('shipping.urls')),
     path('api/returns/', include('returns.urls')),
     path('api/support/', include('support.urls')),
+    path('api/integrations/', include('integrations.urls')), # Added integrations app
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
