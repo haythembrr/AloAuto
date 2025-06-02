@@ -30,17 +30,17 @@ class Command(BaseCommand):
                     password=make_password(STANDARD_PASSWORD),
                     first_name=fake.first_name(),
                     last_name=fake.last_name(),
-                    phone_number=fake.phone_number(),
+                    phone=fake.phone_number(), # Changed from phone_number
                     is_staff=spec["is_staff"],
                     is_superuser=spec["is_superuser"],
-                    user_type=spec["user_type"]
+                    role=spec["user_type"] # Changed from user_type
                 ))
             else:
                 self.stdout.write(self.style.WARNING(f"User {spec['username']} already exists. Skipping creation."))
 
         # Create additional Admin Users
         # Ensure we have at least 3 admins in total, including the test API admin user.
-        num_additional_admins = 3 - sum(1 for spec in users_to_create_spec if spec["user_type"] == "admin")
+        num_additional_admins = 3 - sum(1 for spec in users_to_create_spec if spec["user_type"] == "admin") # user_type is key in spec dict
         for i in range(num_additional_admins):
             username = f"admin_{fake.user_name()}"
             while User.objects.filter(username=username).exists():
@@ -54,15 +54,15 @@ class Command(BaseCommand):
                 password=make_password(STANDARD_PASSWORD),
                 first_name=fake.first_name(),
                 last_name=fake.last_name(),
-                phone_number=fake.phone_number(), 
+                phone=fake.phone_number(), # Changed from phone_number
                 is_staff=True,
                 is_superuser=True,
-                user_type='admin'
+                role='admin' # Changed from user_type
             ))
 
         # Create additional Vendor Users
         # Ensure we have at least 100 vendors, including specific test API vendors.
-        num_additional_vendors = 100 - sum(1 for spec in users_to_create_spec if spec["user_type"] == "vendor")
+        num_additional_vendors = 100 - sum(1 for spec in users_to_create_spec if spec["user_type"] == "vendor") # user_type is key in spec dict
         for i in range(num_additional_vendors):
             username = f"vendor_{fake.user_name()}"
             while User.objects.filter(username=username).exists():
@@ -76,10 +76,10 @@ class Command(BaseCommand):
                 password=make_password(STANDARD_PASSWORD),
                 first_name=fake.first_name(),
                 last_name=fake.last_name(),
-                phone_number=fake.phone_number(),
+                phone=fake.phone_number(), # Changed from phone_number
                 is_staff=False,
                 is_superuser=False,
-                user_type='vendor'
+                role='vendor' # Changed from user_type
             ))
         
         # Create additional Buyer Users
@@ -125,10 +125,10 @@ class Command(BaseCommand):
                 password=make_password(STANDARD_PASSWORD),
                 first_name=fake.first_name(),
                 last_name=fake.last_name(),
-                phone_number=fake.phone_number(), # Generic phone number
+                phone=fake.phone_number(), # Changed from phone_number, Generic phone number
                 is_staff=False,
                 is_superuser=False,
-                user_type='buyer'
+                role='buyer' # Changed from user_type
             ))
         
         User.objects.bulk_create(users, ignore_conflicts=True) # ignore_conflicts might hide issues with username/email generation if not careful
@@ -138,38 +138,32 @@ class Command(BaseCommand):
         # Fetch all users to assign addresses.
         # This is done after user creation to ensure all users, including bulk_created ones, are available.
         all_users = list(User.objects.all())
-        addresses = []
-        for user in all_users:
+        addresses_to_create = []
+        for user_idx, user in enumerate(all_users):
             num_addresses = random.randint(1, 3)
-            for _ in range(num_addresses):
-                addresses.append(Address(
+            for i in range(num_addresses):
+                is_first_address_for_user = (i == 0)
+                addresses_to_create.append(Address(
                     user=user,
-                    street_address=fake.street_address(),
+                    street=fake.street_address(), # Changed from street_address
                     city=fake.city(),
                     state=fake.state(), # Generic state
                     postal_code=fake.postcode(), # Generic postcode
                     country=fake.country(),
-                    is_default_shipping=True, # Make one default shipping
-                    is_default_billing=True, # Make one default billing
+                    is_default_shipping=is_first_address_for_user, # First address is default
+                    is_default_billing=is_first_address_for_user,  # First address is default
                 ))
         
-        # For simplicity, bulk_create addresses. If there's complex logic for default addresses, create individually.
-        Address.objects.bulk_create(addresses)
+        # For simplicity, bulk_create addresses. 
+        # The logic for unique default addresses per user is handled above during generation.
+        # If signals or more complex logic were needed upon Address save, this would need to be individual .create() or smaller batches.
+        Address.objects.bulk_create(addresses_to_create)
         self.stdout.write(self.style.SUCCESS(f'Successfully created {Address.objects.count()} addresses.'))
 
-        # To make default addresses unique per user (if needed)
-        # This part needs to be more robust if strict single default is required.
-        # For now, the last address created for a user via bulk_create might not be the one marked default if there were multiple.
-        # A more robust approach would iterate users and set defaults specifically.
-        # For now, this script assumes the model or app logic handles ensuring only one default.
-        # If not, a post-bulk_create step would be:
-        # for user in all_users:
-        #   if user.addresses.exists():
-        #       addr_to_default = user.addresses.first() # or last(), or random
-        #       # Ensure other addresses for this user are not default for shipping/billing
-        #       Address.objects.filter(user=user).update(is_default_shipping=False, is_default_billing=False)
-        #       addr_to_default.is_default_shipping = True
-        #       addr_to_default.is_default_billing = True
-        #       addr_to_default.save()
+        # The previous post-bulk_create step for default addresses is no longer needed as it's handled during list construction.
+        # However, if `ignore_conflicts=True` was planned for Address bulk_create (it's not currently set), 
+        # and unique constraints on (user, is_default_shipping=True) were in place, 
+        # then this simple pre-assignment might not be robust.
+        # But without such constraints, this is fine. The models currently don't enforce unique default addresses.
 
         self.stdout.write(self.style.SUCCESS('Successfully populated accounts and addresses.'))

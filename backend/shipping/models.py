@@ -15,6 +15,7 @@ class Shipment(models.Model):
     status = models.CharField(max_length=20, choices=SHIPMENT_STATUS, default='pending')
     shipped_at = models.DateTimeField(null=True, blank=True)
     estimated_delivery = models.DateTimeField(null=True, blank=True)
+    actual_delivery_date = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

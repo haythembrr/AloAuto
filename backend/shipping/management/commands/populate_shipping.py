@@ -51,12 +51,12 @@ class Command(BaseCommand):
                 order=order,
                 tracking_number=fake.unique.bothify(text='??########??'), # Example tracking format
                 carrier=random.choice(shipping_carriers),
-                shipped_date=shipment_date,
-                estimated_delivery_date=estimated_delivery_date,
+                shipped_at=shipment_date, # Changed from shipped_date
+                estimated_delivery=estimated_delivery_date, # Changed from estimated_delivery_date
                 actual_delivery_date=actual_delivery_date,
                 # Assuming address details are on the order, or a snapshot is taken here if needed
                 # shipping_address_snapshot = order.shipping_address_snapshot (if needed on shipment model itself)
-                status=order.status # Shipment status can mirror order status or have its own flow
+                status='in_transit' if order.status == 'shipped' else order.status # Map 'shipped' to 'in_transit' for Shipment
             ))
         
         Shipment.objects.bulk_create(shipments_to_create)

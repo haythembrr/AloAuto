@@ -25,15 +25,15 @@ class Command(BaseCommand):
                 if order.status == 'refunded':
                     payment_status = 'refunded'
             elif order.status in ['processing', 'shipped', 'delivered']:
-                payment_status = 'completed'
+                payment_status = 'paid' # Changed from 'completed' to 'paid'
             else: # Default for any other status
                 payment_status = 'pending'
 
-            # If order is delivered or shipped, payment must be completed
-            if order.status in ['delivered', 'shipped'] and payment_status != 'completed':
+            # If order is delivered or shipped, payment must be paid
+            if order.status in ['delivered', 'shipped'] and payment_status != 'paid': # Changed from 'completed'
                  # This case should ideally not happen if logic is consistent
                  # but as a fallback:
-                 payment_status = 'completed'
+                 payment_status = 'paid' # Changed from 'completed'
 
 
             transaction_id = fake.unique.ean(length=13) # Using EAN as a placeholder for transaction_id
@@ -51,9 +51,9 @@ class Command(BaseCommand):
             payments_to_create.append(Payment(
                 order=order,
                 amount=order.total_amount,
-                payment_method=order.payment_method, # Assuming payment_method is on Order
+                method=order.payment_method, # Changed from payment_method to method
                 transaction_id=transaction_id,
-                status=payment_status,
+                status=payment_status, # This should align with Payment.PAYMENT_STATUS choices
                 payment_date=payment_date
                 # additional_details: e.g. last 4 digits of a card, could be faked too
             ))
