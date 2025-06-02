@@ -17,8 +17,10 @@ class ERPSyncLog(models.Model):
     ]
 
     timestamp = models.DateTimeField(auto_now_add=True)
+    run_time = models.DateTimeField(null=True, blank=True) # Actual run time of the sync
     sync_type = models.CharField(max_length=50, choices=SYNC_TYPE_CHOICES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='started')
+    records_affected = models.IntegerField(null=True, blank=True)
     message = models.TextField(blank=True, null=True, help_text="Summary message, e.g., errors or success count.")
     details = models.JSONField(null=True, blank=True, default=dict, help_text="Richer context, e.g., specific error details, processed IDs.")
     # Optional: Link to a user who initiated it, if applicable
@@ -49,6 +51,7 @@ class FileUploadLog(models.Model):
     ]
 
     timestamp = models.DateTimeField(auto_now_add=True)
+    upload_time = models.DateTimeField(null=True, blank=True) # Actual time of upload
     file_name = models.CharField(max_length=255, help_text="Stored file name/path after upload.")
     original_file_name = models.CharField(max_length=255, help_text="Original name of the uploaded file.")
     file_type = models.CharField(max_length=10, choices=FILE_TYPE_CHOICES)

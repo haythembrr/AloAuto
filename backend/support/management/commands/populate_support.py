@@ -56,7 +56,7 @@ class Command(BaseCommand):
                 Ticket.objects.create(
                     user=user,
                     subject=f"{subject} - {fake.unique.ean(length=8)}", # Add unique part to subject
-                    description=fake.text(max_nb_chars=500),
+                    message=fake.text(max_nb_chars=500), # Changed from description
                     status=status,
                     priority=priority,
                     created_at=created_at,
