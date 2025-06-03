@@ -596,7 +596,7 @@ def scenario_admin_manage_orders(admin_client):
 
     return success
 
-if __name__ == "__main__":
+def main():
     logging.info("======== Starting Orders API Tests ========")
 
     admin_client = ApiClient(user_role="admin")
@@ -620,22 +620,28 @@ if __name__ == "__main__":
             results["buyer_manage_wishlist"] = scenario_buyer_manage_wishlist(buyer_client)
             time.sleep(0.5)
             # Pass admin_client to buyer_create_order for address setup if needed by that function's current logic
-            results["buyer_create_and_view_order"] = scenario_buyer_create_and_view_order(buyer_client, admin_client)
+            results["buyer_create_and_view_order"] = scenario_buyer_create_and_view_order(
+                buyer_client, admin_client
+            )
 
             # Vendor tests might depend on order created by buyer
-            if results.get("buyer_create_and_view_order"): # Only if order was created
+            if results.get("buyer_create_and_view_order"):
+                # Only if order was created
                 results["vendor_view_orders"] = scenario_vendor_view_orders(vendor_client)
             else:
-                logging.warning("Skipping vendor order tests as buyer order creation failed or was skipped.")
-                results["vendor_view_orders"] = False # Mark as failed or skipped
+                logging.warning(
+                    "Skipping vendor order tests as buyer order creation failed or was skipped."
+                )
+                results["vendor_view_orders"] = False  # Mark as failed or skipped
 
             # Admin tests might depend on order created by buyer
             if results.get("buyer_create_and_view_order"):
                 results["admin_manage_orders"] = scenario_admin_manage_orders(admin_client)
             else:
-                logging.warning("Skipping admin order management tests as buyer order creation failed or was skipped.")
+                logging.warning(
+                    "Skipping admin order management tests as buyer order creation failed or was skipped."
+                )
                 results["admin_manage_orders"] = False
-
 
     logging.info("\n======== Orders API Test Summary ========")
     all_passed = True
@@ -645,7 +651,7 @@ if __name__ == "__main__":
         if not success_status:
             all_passed = False
 
-    if not results: # If no tests ran due to auth failure
+    if not results:  # If no tests ran due to auth failure
         all_passed = False
         logging.error("No order tests were executed due to client authentication failures or setup issues.")
 

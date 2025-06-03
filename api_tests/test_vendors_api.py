@@ -387,13 +387,13 @@ def scenario_public_view_vendors(guest_client):
     return success
 
 
-if __name__ == "__main__":
+def main():
     logging.info("======== Starting Vendor API Tests ========")
 
     admin_client = ApiClient(user_role="admin")
-    vendor_client = ApiClient(user_role="vendor") # vendor_test_api_user
-    # vendor2_client = ApiClient(user_role="vendor2") # vendor2_test_api_user - if needed for specific tests
-    guest_client = ApiClient(user_role="guest") # Unauthenticated
+    vendor_client = ApiClient(user_role="vendor")  # vendor_test_api_user
+    # vendor2_client = ApiClient(user_role="vendor2")  # vendor2_test_api_user - if needed for specific tests
+    guest_client = ApiClient(user_role="guest")  # Unauthenticated
 
     results = {}
 
@@ -403,17 +403,25 @@ if __name__ == "__main__":
         test_data_ids["vendor1_user_id"], test_data_ids["vendor1_profile_id"] = \
             get_user_id_and_vendor_profile_id(admin_client, CREDENTIALS["vendor"]["username"])
     else:
-        logging.error("Admin client failed to auth. Vendor ID pre-fetch might fail or be incomplete.")
+        logging.error(
+            "Admin client failed to auth. Vendor ID pre-fetch might fail or be incomplete."
+        )
         # Fallback: vendor client tries to fetch its own IDs if admin can't.
 
     if vendor_client.token:
-        results["vendor_manage_own_profile"] = scenario_vendor_manage_own_profile(vendor_client, "vendor")
+        results["vendor_manage_own_profile"] = scenario_vendor_manage_own_profile(
+            vendor_client, "vendor"
+        )
     else:
-        logging.error(f"Vendor ({CREDENTIALS['vendor']['username']}) client failed to authenticate. Skipping its tests.")
+        logging.error(
+            f"Vendor ({CREDENTIALS['vendor']['username']}) client failed to authenticate. Skipping its tests."
+        )
         results["vendor_manage_own_profile"] = False
 
     if admin_client.token:
-        results["admin_manage_vendor_profiles"] = scenario_admin_manage_vendor_profiles(admin_client)
+        results["admin_manage_vendor_profiles"] = scenario_admin_manage_vendor_profiles(
+            admin_client
+        )
     else:
         logging.error("Admin client failed to authenticate. Skipping admin-vendor tests.")
         results["admin_manage_vendor_profiles"] = False
