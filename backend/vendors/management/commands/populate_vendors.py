@@ -19,7 +19,7 @@ class Command(BaseCommand):
 
         vendors_to_create = []
         for user in vendor_users:
-            company_name = fake.company()
+            company_name = fake.name() + fake.company()
             # Ensure unique slug
             slug = slugify(company_name)
             original_slug = slug

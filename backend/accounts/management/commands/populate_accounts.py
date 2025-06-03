@@ -91,7 +91,7 @@ class Command(BaseCommand):
         current_planned_users = len(users) # This includes specific test users and additional admins/vendors
 
         # Target total users (approx)
-        total_target_users = 1000
+        total_target_users = 100
 
         # How many more buyers to create
         num_additional_buyers = total_target_users - current_planned_users

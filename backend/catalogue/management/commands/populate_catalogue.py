@@ -61,7 +61,7 @@ class Command(BaseCommand):
             if i % 500 == 0 and i > 0:
                 self.stdout.write(f"Preparing product {i} of {num_products}...")
 
-            name = fake.ecommerce_name() # Placeholder for product name
+            name = fake.name() # Placeholder for product name
             name_for_slug = name[:30] # Truncate for slug generation
             slug = slugify(name_for_slug)
             original_slug = slug

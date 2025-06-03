@@ -64,7 +64,7 @@ class Command(BaseCommand):
             # Determine payment method
             # Assuming Payment.PAYMENT_METHOD_CHOICES are ('credit_card', 'Credit Card'), ('paypal', 'PayPal'), ('cash', 'Cash')
             # Note: 'bank_transfer' is NOT a valid choice for Payment.method as per problem description.
-            valid_payment_model_methods = [choice[0] for choice in Payment.PAYMENT_METHOD_CHOICES] # Use actual attribute name
+            valid_payment_model_methods = [choice[0] for choice in Payment.PAYMENT_METHOD] # Use actual attribute name
             order_payment_method_value = order.payment_method # This comes from Order model's payment_method field
 
             if 'card' in order_payment_method_value.lower():

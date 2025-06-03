@@ -88,8 +88,8 @@ class Command(BaseCommand):
 
             order_data = {
                 "user": user,
-                "shipping_address_snapshot": f"{shipping_address.street_address}, {shipping_address.city}, {shipping_address.postal_code}", # Simplified snapshot
-                "billing_address_snapshot": f"{billing_address.street_address}, {billing_address.city}, {billing_address.postal_code}", # Simplified snapshot
+                "shipping_address_snapshot": f"{shipping_address.street}, {shipping_address.city}, {shipping_address.postal_code}", # Simplified snapshot
+                "billing_address_snapshot": f"{billing_address.street}, {billing_address.city}, {billing_address.postal_code}", # Simplified snapshot
                 "status": order_status,
                 "total_amount": 0, # Will be calculated from items
                 "payment_method": random.choice(['credit_card', 'paypal', 'bank_transfer', 'cash_on_delivery']),
