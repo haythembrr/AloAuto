@@ -37,12 +37,12 @@ class Command(BaseCommand):
 
 
             transaction_id = fake.unique.ean(length=13) # Using EAN as a placeholder for transaction_id
-            
+
             # Payment date should align with order date, or slightly after for processing
             payment_date = order.created_at + timezone.timedelta(minutes=random.randint(1, 60)) if order.status != 'pending' else order.created_at
             if payment_date > timezone.now():
                 payment_date = timezone.now()
-            
+
             # For refunded payments
             if payment_status == 'refunded' and order.updated_at > payment_date:
                 payment_date = order.updated_at

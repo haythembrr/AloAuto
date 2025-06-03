@@ -18,11 +18,11 @@ def get_vendor_products(vendor_client, vendor_profile_id):
     if not vendor_profile_id:
         logging.error("Vendor Profile ID not provided, cannot fetch products.")
         return []
-    
+
     # Assuming an endpoint like /catalogue/products/?vendor_id={vendor_profile_id}
     # or that /catalogue/products/ is automatically filtered for the authenticated vendor
     response = vendor_client.get("/catalogue/products/") # This might be filtered by default
-    
+
     products = []
     if response.status_code == 200:
         results = response.json().get("results", [])
@@ -96,11 +96,11 @@ def scenario_public_browse_catalogue(guest_client):
         else:
             logging.info("Public: No products found to view details for.")
             # This could be a failure if products are expected after data population
-            # success = False 
+            # success = False
     else:
         logging.error(f"Public: Failed to list products. Status: {response_prod.status_code}")
         success = False
-        
+
     return success
 
 def scenario_admin_manage_categories(admin_client):
@@ -142,7 +142,7 @@ def scenario_admin_manage_categories(admin_client):
     else:
         logging.error(f"Admin: Failed to update category {cat_id}. Status: {response.status_code}, Response: {response.text}")
         success = False
-        
+
     # 4. Delete the category
     logging.info(f"Admin: Deleting category ID {cat_id}...")
     response = admin_client.delete(f"/catalogue/categories/{cat_id}/")
@@ -169,7 +169,7 @@ def scenario_vendor_manage_own_products(vendor_client, admin_client_for_setup):
     # 0. Get Vendor Profile ID for the current vendor
     vendor_username = CREDENTIALS["vendor"]["username"]
     _, vendor_profile_id = get_user_id_and_vendor_profile_id(vendor_client, vendor_username) # Use own client
-    
+
     if not vendor_profile_id:
         # Try with admin client if self-fetch failed (e.g. due to restrictive permissions on ID fetch)
         logging.warning(f"Vendor client could not fetch its own vendor profile ID for {vendor_username}. Trying with admin client...")
@@ -261,7 +261,7 @@ def scenario_vendor_manage_own_products(vendor_client, admin_client_for_setup):
     else:
         logging.error(f"Vendor ({vendor_username}): Failed to update product {prod_id}. Status: {response.status_code}, Response: {response.text}")
         success = False
-        
+
     # 5. Delete the product
     logging.info(f"Vendor ({vendor_username}): Deleting product ID {prod_id}...")
     response = vendor_client.delete(f"/catalogue/products/{prod_id}/")
@@ -270,7 +270,7 @@ def scenario_vendor_manage_own_products(vendor_client, admin_client_for_setup):
     else:
         logging.error(f"Vendor ({vendor_username}): Failed to delete product {prod_id}. Status: {response.status_code}")
         success = False
-    
+
     # Verify deletion
     if success:
         response = vendor_client.get(f"/catalogue/products/{prod_id}/")
@@ -279,7 +279,7 @@ def scenario_vendor_manage_own_products(vendor_client, admin_client_for_setup):
         else:
             logging.error(f"Vendor ({vendor_username}): Product {prod_id} still found after delete. Status: {response.status_code}")
             success = False
-            
+
     return success
 
 def scenario_admin_manage_any_product(admin_client):
@@ -290,7 +290,7 @@ def scenario_admin_manage_any_product(admin_client):
     if not target_product_id:
         # If vendor scenario didn't run or product ID wasn't set, try to get one from public listing
         target_product_id = test_data_ids.get("shared_product_id_for_guest_view")
-    
+
     if not target_product_id:
         logging.error("Admin: No product ID available (from vendor test or public list) to manage. Skipping admin product tests.")
         return False # Cannot proceed without a product to manage
@@ -322,7 +322,7 @@ def scenario_admin_manage_any_product(admin_client):
     else:
         logging.error(f"Admin: Failed to update product {target_product_id}. Status: {response.status_code}, Response: {response.text}")
         success = False
-        
+
     # 3. Delete the product - Let's assume admin can delete any product.
     # For this test, we will delete it, assuming vendor test created it and is done with it.
     # If this product was from the general list, it will be gone.
@@ -332,13 +332,13 @@ def scenario_admin_manage_any_product(admin_client):
         logging.info(f"Admin: Successfully deleted product {target_product_id}.")
         # Clear it from test_data_ids so other tests don't try to use it
         if test_data_ids.get("vendor1_product_id") == target_product_id:
-            test_data_ids["vendor1_product_id"] = None 
+            test_data_ids["vendor1_product_id"] = None
         if test_data_ids.get("shared_product_id_for_guest_view") == target_product_id:
             test_data_ids["shared_product_id_for_guest_view"] = None
     else:
         logging.error(f"Admin: Failed to delete product {target_product_id}. Status: {response.status_code}")
         success = False
-        
+
     return success
 
 
@@ -387,7 +387,7 @@ if __name__ == "__main__":
         logging.info(f"Scenario '{test_name}': {status_msg}")
         if not success_status:
             all_passed = False
-    
+
     if all_passed:
         logging.info("All Catalogue API scenarios passed!")
     else:

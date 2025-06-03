@@ -15,13 +15,13 @@ def get_user_id_by_username(client, username):
     """Helper to get user ID by username. Assumes an admin client and an endpoint that allows this."""
     if client.user_role != "admin":
         logging.warning("Attempting to get user ID by username without admin privileges. This might fail.")
-    
+
     # This endpoint might not exist or might have different filtering.
     # Common DRF practice is /api/accounts/users/ or similar.
     # We assume it supports ?username=... query param or similar.
     # If not, this helper needs adjustment or we rely on IDs known from population.
     # For now, let's assume the user data from CREDENTIALS is what we need for self-tests.
-    
+
     # Fallback: For testing, we often need the ID of the *current* user.
     # The "me" endpoint or profile endpoint is common for this.
     # Let's assume /api/accounts/users/me/ exists for authenticated users.
@@ -110,7 +110,7 @@ def scenario_admin_manage_users(admin_client):
         else:
             logging.error(f"Admin: Failed to update user {user_id}. Status: {response.status_code}, Response: {response.text}")
             success = False
-    
+
     # 4. Delete a user - SKIPPING for now to keep test users, unless we create a disposable one.
     # logging.info("Admin: Deleting a user (skipped for now)...")
 
@@ -170,7 +170,7 @@ def scenario_buyer_manage_own_account(buyer_client):
     else:
         logging.error(f"Buyer: Incorrectly allowed/failed to list users. Status: {response.status_code}")
         success = False
-        
+
     return success
 
 def scenario_buyer_manage_addresses(buyer_client):
@@ -242,7 +242,7 @@ def scenario_buyer_manage_addresses(buyer_client):
     else:
         logging.error(f"Buyer: Failed to update address {address_id}. Status: {response.status_code}, Response: {response.text}")
         success = False
-        
+
     # 5. Delete the address
     logging.info(f"Buyer: Deleting address ID {address_id}...")
     response = buyer_client.delete(f"/accounts/addresses/{address_id}/")
@@ -261,17 +261,17 @@ def scenario_buyer_manage_addresses(buyer_client):
         else:
             logging.error(f"Buyer: Address {address_id} still found after delete attempt. Status: {response.status_code}")
             success = False
-            
+
     return success
 
 
 if __name__ == "__main__":
     logging.info("======== Starting Accounts API Tests ========")
-    
+
     # Initialize clients
     admin_client = ApiClient(user_role="admin")
     buyer_client = ApiClient(user_role="buyer")
-    
+
     results = {}
 
     if not admin_client.token:
@@ -292,7 +292,7 @@ if __name__ == "__main__":
         logging.info(f"Scenario '{test_name}': {status_msg}")
         if not success_status:
             all_passed = False
-    
+
     if all_passed:
         logging.info("All Accounts API scenarios passed!")
     else:

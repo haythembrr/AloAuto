@@ -16,14 +16,14 @@ class Command(BaseCommand):
         self.stdout.write("Creating ERPSyncLog entries...")
         num_erp_logs = random.randint(50, 100)
         erp_sync_logs_created = 0
-        
+
         sync_types = ['product_update', 'order_export', 'inventory_sync', 'customer_import']
         sync_statuses = ['success', 'failed', 'partial_success', 'pending']
 
         for _ in range(num_erp_logs):
             sync_time = fake.date_time_between(start_date="-6m", end_date="now", tzinfo=timezone.get_current_timezone())
             status = random.choice(sync_statuses)
-            
+
             details = {}
             if status == 'failed':
                 details['error_message'] = fake.sentence()
@@ -38,9 +38,9 @@ class Command(BaseCommand):
                 ERPSyncLog.objects.create(
                     sync_type=random.choice(sync_types),
                     status=status,
-                    records_affected=details.get('items_processed') or details.get('items_synced', 0),
-                    run_time=sync_time,
-                    log_details=details # Assuming this is a JSONField or TextField
+                    records_affected=details.get('items_processed') or details.get('items_synced', 0), # This is correct
+                    run_time=sync_time, # This is correct
+                    details=details # Changed from log_details to details
                 )
                 erp_sync_logs_created +=1
             except Exception as e:
@@ -52,32 +52,39 @@ class Command(BaseCommand):
         self.stdout.write("Creating FileUploadLog entries...")
         if not admin_users:
             self.stdout.write(self.style.WARNING('No admin/staff users found. FileUploadLogs will not be associated with a user.'))
-        
+
         num_file_logs = random.randint(20, 30)
         file_upload_logs_created = 0
         file_types = ['product_import_csv', 'vendor_data_xls', 'image_zip_archive', 'customer_list_csv']
-        file_statuses = ['uploaded', 'processing', 'completed', 'failed']
+        # Align with model choices for FileUploadLog.STATUS_CHOICES
+        file_statuses = ['uploaded', 'validating', 'processing', 'completed', 'failed_validation', 'failed_processing']
 
         for _ in range(num_file_logs):
             upload_time = fake.date_time_between(start_date="-3m", end_date="now", tzinfo=timezone.get_current_timezone())
             status = random.choice(file_statuses)
-            
+
             file_name = f"{fake.word()}_{fake.random_int(min=100,max=999)}.{random.choice(['csv','xls','zip','jpg'])}"
-            
-            log_details = {}
-            if status == 'failed':
-                log_details['error'] = fake.sentence()
+
+            current_error_details = [] # Model field error_details expects a list
+            rows_processed_count = 0
+
+            if status == 'failed_validation' or status == 'failed_processing': # Model uses these statuses
+                # Create a sample error entry
+                current_error_details.append({'row': random.randint(1,100), 'error': fake.sentence()})
             elif status == 'completed':
-                log_details['rows_processed'] = random.randint(10,500)
-            
+                rows_processed_count = random.randint(10,500)
+            # For other statuses like 'uploaded', 'processing', 'validating', error_details remains empty list and rows_processed_count is 0.
+
             try:
                 FileUploadLog.objects.create(
-                    file_name=file_name,
+                    file_name=file_name, # This field is not in the latest model, original_file_name is used. Assuming file_name is actually original_file_name.
+                    original_file_name=file_name, # Mapping to the correct field based on model definition.
                     file_type=random.choice(file_types),
                     uploaded_by=random.choice(admin_users) if admin_users else None,
-                    upload_time=upload_time,
-                    status=status,
-                    processing_details=log_details # Assuming JSONField or TextField
+                    upload_time=upload_time, # This is correct
+                    status=status, # This should align with FileUploadLog.STATUS_CHOICES
+                    processed_rows=rows_processed_count,
+                    error_details=current_error_details # Changed from processing_details, and ensured it's a list
                 )
                 file_upload_logs_created += 1
             except Exception as e:

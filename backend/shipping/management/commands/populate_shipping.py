@@ -14,7 +14,7 @@ class Command(BaseCommand):
 
         # Only create shipments for orders that are shipped or delivered
         shippable_orders = list(Order.objects.filter(status__in=['shipped', 'delivered']))
-        
+
         if not shippable_orders:
             self.stdout.write(self.style.WARNING('No orders found with status "shipped" or "delivered". Skipping shipment creation.'))
             return
@@ -27,10 +27,10 @@ class Command(BaseCommand):
             shipment_date = fake.date_time_between(start_date=order.created_at, end_date=order.updated_at, tzinfo=timezone.get_current_timezone())
             if shipment_date > order.updated_at: # ensure it's not after the final update
                 shipment_date = order.updated_at
-            
+
             # Estimated delivery date
             estimated_delivery_date = shipment_date + timezone.timedelta(days=random.randint(1, 10))
-            
+
             # Actual delivery date (only if order is delivered)
             actual_delivery_date = None
             if order.status == 'delivered':
@@ -58,6 +58,6 @@ class Command(BaseCommand):
                 # shipping_address_snapshot = order.shipping_address_snapshot (if needed on shipment model itself)
                 status='in_transit' if order.status == 'shipped' else order.status # Map 'shipped' to 'in_transit' for Shipment
             ))
-        
+
         Shipment.objects.bulk_create(shipments_to_create)
         self.stdout.write(self.style.SUCCESS(f'Successfully created {Shipment.objects.count()} shipments.'))

@@ -88,7 +88,7 @@ class ApiClient:
     def request(self, method, endpoint, data=None, params=None, log_payload=True):
         url = f"{self.base_url}{endpoint}"
         headers = self._get_headers()
-        
+
         payload_for_log = data if log_payload else "Payload not logged for this request."
         logging.info(f"[{self.user_role.upper()}] Making {method} request to {url} with params {params}, data: {payload_for_log}")
 
@@ -97,7 +97,7 @@ class ApiClient:
                 data = json.dumps(data) # Ensure data is JSON string if it's a dict/list
 
             response = requests.request(method, url, headers=headers, data=data, params=params)
-            
+
             # Attempt to log JSON response, or text if not JSON
             try:
                 response_json = response.json()
@@ -133,7 +133,7 @@ class ApiClient:
 if __name__ == "__main__":
     # Example usage / basic test of the client
     logging.info("Testing ApiClient...")
-    
+
     # Test Guest
     guest_client = ApiClient(user_role="guest")
     logging.info("Guest client attempting to access a public endpoint (e.g., products list)")

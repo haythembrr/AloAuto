@@ -27,7 +27,7 @@ class Command(BaseCommand):
             while Vendor.objects.filter(slug=slug).exists():
                 slug = f"{original_slug}-{counter}"
                 counter += 1
-            
+
             # Ensure unique tax number
             tax_number = fake.bothify(text='TN#########') # Example format
             while Vendor.objects.filter(tax_number=tax_number).exists():

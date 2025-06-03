@@ -22,9 +22,9 @@ class Command(BaseCommand):
 
         num_tickets = random.randint(100, 200)
         tickets_created_count = 0
-        
+
         ticket_subjects = [
-            "Issue with my order", "Payment problem", "Delivery delay", 
+            "Issue with my order", "Payment problem", "Delivery delay",
             "Question about a product", "Account help needed", "Return request query",
             "Website bug report", "Feature request"
         ]
@@ -36,10 +36,10 @@ class Command(BaseCommand):
             subject = random.choice(ticket_subjects)
             status = random.choice(possible_statuses)
             priority = random.choice(possible_priorities)
-            
+
             # Ticket creation date
             created_at = fake.date_time_between(start_date="-1y", end_date="now", tzinfo=timezone.get_current_timezone())
-            
+
             # Updated date: same as created if new, or later if processed
             updated_at = created_at
             if status != 'open': # If it's not a brand new ticket
@@ -61,7 +61,7 @@ class Command(BaseCommand):
                     priority=priority,
                     created_at=created_at,
                     updated_at=updated_at,
-                    order=linked_order 
+                    order=linked_order
                     # assigned_to (ForeignKey to an admin/support User) could be added if applicable
                 )
                 tickets_created_count += 1

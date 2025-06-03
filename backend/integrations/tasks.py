@@ -1,6 +1,6 @@
 from celery import shared_task
 from .models import ERPSyncLog, FileUploadLog
-from backend.catalogue.models import Product # Assuming Product model path
+from catalogue.models import Product # Corrected import path
 import pandas as pd
 import io
 from django.core.files.storage import default_storage

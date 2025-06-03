@@ -38,13 +38,13 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if options['clear']:
             self.stdout.write(self.style.WARNING("Starting to clear existing data as per --clear option..."))
-            
+
             # Important: Define models to clear in reverse order of dependency, or use app labels if models are complex.
             # This is a simplified clearing mechanism. For complex relationships with cascades,
             # direct model.objects.all().delete() in the correct order is more reliable.
             # For now, we will clear data from the models populated by each script.
             # This part needs to be implemented carefully based on actual model definitions and dependencies.
-            
+
             # Example of clearing (models need to be imported):
             # from integrations.models import ERPSyncLog, FileUploadLog
             # from support.models import Ticket
@@ -64,17 +64,17 @@ class Command(BaseCommand):
                 ('returns', 'ReturnItem'), ('returns', 'ReturnRequest'),
                 ('shipping', 'Shipment'),
                 ('payments', 'Payment'),
-                ('orders', 'OrderItem'), ('orders', 'Order'), 
+                ('orders', 'OrderItem'), ('orders', 'Order'),
                 ('orders', 'CartItem'), ('orders', 'Cart'), ('orders', 'Wishlist'), # Wishlist products are M2M, usually safe
                 ('catalogue', 'ProductImage'), ('catalogue', 'Product'), ('catalogue', 'Category'),
                 ('vendors', 'Vendor'),
-                ('accounts', 'Address'), 
+                ('accounts', 'Address'),
                 # ('accounts', 'User'), # Clearing users is very destructive. Usually not done in populate scripts unless for a full reset.
                                       # If User is cleared, other tables are usually cascaded or raise errors.
                                       # For this script, we might skip User clearing to avoid issues with admin accounts etc.
                                       # Or only clear specific types of users.
             ]
-            
+
             self.stdout.write(self.style.WARNING("Clearing Users is disabled by default in this script. Clear manually if needed."))
 
             connection = connections[DEFAULT_DB_ALIAS]
@@ -89,7 +89,7 @@ class Command(BaseCommand):
                             # Using raw SQL for TRUNCATE or DELETE for speed and to bypass signals if desired.
                             # TRUNCATE is faster but might be locked or not available for referenced tables.
                             # DELETE FROM is safer.
-                            cursor.execute(f"DELETE FROM {table_name};") 
+                            cursor.execute(f"DELETE FROM {table_name};")
                             # For PostgreSQL, to reset sequences (optional, usually handled by Django):
                             # cursor.execute(f"ALTER SEQUENCE {table_name}_id_seq RESTART WITH 1;")
                             self.stdout.write(self.style.SUCCESS(f"Cleared {table_name}."))
@@ -109,7 +109,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.ERROR(f"Error running {command_name} for {app_name}: {e}"))
                 self.stdout.write(self.style.WARNING("Stopping further population due to error."))
                 # Optionally, re-raise the exception if you want the whole command to fail loudly
-                # raise e 
+                # raise e
                 break # Stop on error
 
         self.stdout.write(self.style.SUCCESS('\nAll data population commands executed.'))

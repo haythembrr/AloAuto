@@ -48,7 +48,7 @@ def setup_initial_data(admin_client, vendor_client):
         if not all_products:
             logging.error("No products found in catalogue. Cannot proceed with order tests.")
             return False
-        
+
         # General product
         test_data["product_id_for_cart"] = all_products[0].get("id")
         logging.info(f"Product ID for cart (any vendor): {test_data['product_id_for_cart']}")
@@ -63,7 +63,7 @@ def setup_initial_data(admin_client, vendor_client):
             elif isinstance(vendor_info, dict) and vendor_info.get("id") == test_data["vendor1_profile_id"]:
                 test_data["product_from_vendor1_id"] = prod.get("id")
                 break
-        
+
         if test_data["product_from_vendor1_id"]:
             logging.info(f"Product ID from Vendor1 ({vendor1_username}): {test_data['product_from_vendor1_id']}")
         else:
@@ -80,11 +80,11 @@ def setup_initial_data(admin_client, vendor_client):
     else:
         logging.error(f"Failed to list products for setup. Status: {products_response.status_code}")
         return False
-    
+
     if not test_data["product_id_for_cart"]:
         logging.error("No suitable product found to use for cart testing.")
         return False
-        
+
     return True
 
 def scenario_buyer_manage_cart(buyer_client):
@@ -134,7 +134,7 @@ def scenario_buyer_manage_cart(buyer_client):
     if response.status_code == 200:
         cart_data = response.json()
         if not test_data.get("cart_id"): test_data["cart_id"] = cart_data.get("id") # Ensure cart_id is set
-        
+
         item_found = any(item.get("id") == test_data["cart_item_id"] for item in cart_data.get("items", []))
         if item_found:
             logging.info(f"Buyer: Cart (ID: {test_data['cart_id']}) correctly shows added item.")
@@ -183,7 +183,7 @@ def scenario_buyer_manage_cart(buyer_client):
             success = False
     else:
         logging.warning("Buyer: No cart_item_id, skipping remove test.")
-        
+
     return success
 
 def scenario_buyer_manage_wishlist(buyer_client):
@@ -250,7 +250,7 @@ def scenario_buyer_manage_wishlist(buyer_client):
             if not test_data.get("wishlist_id"): test_data["wishlist_id"] = wishlist_data.get("id")
         elif isinstance(wishlist_data, list): # Direct list of items/products
             items_in_wishlist = wishlist_data
-        
+
         # Check if product_id (integer) or product object with "id": product_id is present
         item_found = any(
             (isinstance(item, int) and item == product_id) or \
@@ -294,7 +294,7 @@ def scenario_buyer_manage_wishlist(buyer_client):
     else:
         logging.error(f"Buyer: Failed to remove item from wishlist. Status: {response_remove.status_code}, Response: {response_remove.text}")
         success = False
-        
+
     return success
 
 def scenario_buyer_create_and_view_order(buyer_client, admin_client_for_address_setup):
@@ -315,7 +315,7 @@ def scenario_buyer_create_and_view_order(buyer_client, admin_client_for_address_
     # Check if buyer has addresses; if not, create one.
     # This assumes /accounts/addresses/?user_id={id} or similar is available to admin.
     # A simpler way: buyer client tries to get its addresses, if none, it creates one.
-    
+
     addr_response = buyer_client.get("/accounts/addresses/") # Get own addresses
     shipping_address_id = None
     billing_address_id = None
@@ -442,24 +442,24 @@ def scenario_buyer_create_and_view_order(buyer_client, admin_client_for_address_
     else:
         logging.error(f"Buyer: Failed to retrieve order {order_id}. Status: {response_detail.status_code}")
         success = False
-        
+
     return success
 
 def scenario_vendor_view_orders(vendor_client):
     logging.info("--- Scenario: Vendor Views Orders ---")
     success = True
-    
+
     if not test_data.get("vendor1_profile_id"):
         logging.error("Vendor: vendor1_profile_id not set. Cannot verify orders for this vendor.")
         return False
-    
+
     # 1. List orders (should be filtered to show only orders containing this vendor's products)
     logging.info(f"Vendor ({CREDENTIALS['vendor']['username']}): Listing orders containing their products...")
     response = vendor_client.get("/orders/") # API should filter this
     if response.status_code == 200:
         orders_for_vendor = response.json().get("results", [])
         logging.info(f"Vendor: Found {len(orders_for_vendor)} orders/order items relevant to this vendor.")
-        
+
         # If an order was created by buyer with vendor1's product, it should appear here.
         order_created_by_buyer = test_data.get("order_id_by_buyer")
         found_buyer_order = False
@@ -487,7 +487,7 @@ def scenario_vendor_view_orders(vendor_client):
                         logging.warning(f"Vendor: Could not get detail for listed order {order_created_by_buyer}. Status: {detail_resp.status_code}")
 
                     break # Found the order in the list
-        
+
         if order_created_by_buyer and test_data.get("product_from_vendor1_id") == test_data.get("product_id_for_cart") and not found_buyer_order:
             # If the product placed in order was indeed vendor1's, then this order should be listed for vendor1.
             logging.error(f"Vendor: Order {order_created_by_buyer} (which should contain vendor1's product) not found in vendor's order list.")
@@ -509,7 +509,7 @@ def scenario_vendor_view_orders(vendor_client):
         status_payload = {"status": "prepared_for_shipping"} # Example status
         logging.info(f"Vendor: Attempting to update status for OrderItem {order_item_to_update}...")
         # The endpoint needs to be specific to what a vendor can update.
-        # A common pattern: PATCH /api/orders/items/{item_id}/ 
+        # A common pattern: PATCH /api/orders/items/{item_id}/
         # Or a custom action: PATCH /api/orders/items/{item_id}/set_status/
         item_update_resp = vendor_client.patch(f"/orders/items/{order_item_to_update}/", data=status_payload)
         if item_update_resp.status_code == 200 and item_update_resp.json().get("status") == status_payload["status"]:
@@ -523,7 +523,7 @@ def scenario_vendor_view_orders(vendor_client):
             # success = False # This might be optional functionality
     else:
         logging.info("Vendor: No specific order item ID from vendor1's product in a buyer order to test status update.")
-        
+
     return success
 
 def scenario_admin_manage_orders(admin_client):
@@ -546,7 +546,7 @@ def scenario_admin_manage_orders(admin_client):
                     if page_resp.status_code == 200:
                         current_page = page_resp.json()
                         found = any(o.get("id") == target_order_id for o in current_page.get("results",[]))
-                    else: break 
+                    else: break
             if not found:
                 logging.warning(f"Admin: Buyer's order {target_order_id} not found in admin's full order list.")
                 # success = False # This implies an issue with data visibility or test setup
@@ -598,11 +598,11 @@ def scenario_admin_manage_orders(admin_client):
 
 if __name__ == "__main__":
     logging.info("======== Starting Orders API Tests ========")
-    
+
     admin_client = ApiClient(user_role="admin")
     vendor_client = ApiClient(user_role="vendor")
     buyer_client = ApiClient(user_role="buyer")
-    
+
     results = {}
 
     if not all([admin_client.token, vendor_client.token, buyer_client.token]):
@@ -616,12 +616,12 @@ if __name__ == "__main__":
         else:
             results["buyer_manage_cart"] = scenario_buyer_manage_cart(buyer_client)
             # Wait a tiny bit for any async operations if cart creation affects wishlist or order
-            time.sleep(0.5) 
+            time.sleep(0.5)
             results["buyer_manage_wishlist"] = scenario_buyer_manage_wishlist(buyer_client)
             time.sleep(0.5)
             # Pass admin_client to buyer_create_order for address setup if needed by that function's current logic
             results["buyer_create_and_view_order"] = scenario_buyer_create_and_view_order(buyer_client, admin_client)
-            
+
             # Vendor tests might depend on order created by buyer
             if results.get("buyer_create_and_view_order"): # Only if order was created
                 results["vendor_view_orders"] = scenario_vendor_view_orders(vendor_client)
@@ -644,7 +644,7 @@ if __name__ == "__main__":
         logging.info(f"Scenario '{test_name}': {status_msg}")
         if not success_status:
             all_passed = False
-    
+
     if not results: # If no tests ran due to auth failure
         all_passed = False
         logging.error("No order tests were executed due to client authentication failures or setup issues.")

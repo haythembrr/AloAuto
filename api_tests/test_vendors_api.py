@@ -41,7 +41,7 @@ def get_user_id_and_vendor_profile_id(client, target_username):
     # 2. Get Vendor Profile ID using the User ID (assuming vendor profiles are linked via user_id)
     # The endpoint /vendors/ might list all vendors (for admin) or filter by current user (for vendor)
     # Or there might be a /vendors/?user_id={user_id} or /vendors/my-profile/
-    
+
     # Try fetching vendor profile assuming the client is the vendor themselves
     if CREDENTIALS.get(client.user_role, {}).get("username") == target_username:
         logging.info(f"Attempting to fetch vendor profile for self ({target_username}) via /vendors/my-profile/ or similar...")
@@ -97,11 +97,11 @@ def get_user_id_and_vendor_profile_id(client, target_username):
                 elif isinstance(user_info, dict): # Nested object
                     if user_info.get("id") == user_id or user_info.get("username") == target_username:
                         user_matches = True
-                
+
                 if user_matches:
                     vendor_profile_id = vendor.get("id")
                     break
-    
+
     if vendor_profile_id:
         logging.info(f"Found vendor profile ID for user {target_username} (User ID: {user_id}): {vendor_profile_id}")
     else:
@@ -114,7 +114,7 @@ def get_user_id_and_vendor_profile_id(client, target_username):
 def scenario_vendor_manage_own_profile(vendor_client, vendor_username_key="vendor"):
     logging.info(f"--- Scenario: Vendor ({CREDENTIALS[vendor_username_key]['username']}) Manages Own Profile ---")
     success = True
-    
+
     vendor_user_id, vendor_profile_id = get_user_id_and_vendor_profile_id(vendor_client, CREDENTIALS[vendor_username_key]["username"])
 
     if not vendor_user_id:
@@ -147,7 +147,7 @@ def scenario_vendor_manage_own_profile(vendor_client, vendor_username_key="vendo
     # 2. Update own vendor profile
     updated_description = f"Updated description by {CREDENTIALS[vendor_username_key]['username']} at {logging.getLogger().name}" # Ensure it's unique enough for test
     payload = {"description": updated_description, "user": vendor_user_id} # 'user' might be read-only or not required in payload
-    
+
     logging.info(f"Vendor ({CREDENTIALS[vendor_username_key]['username']}): Updating own vendor profile (ID: {vendor_profile_id})...")
     response = vendor_client.patch(f"/vendors/{vendor_profile_id}/", data=payload)
     if response.status_code == 200:
@@ -159,7 +159,7 @@ def scenario_vendor_manage_own_profile(vendor_client, vendor_username_key="vendo
     else:
         logging.error(f"Vendor ({CREDENTIALS[vendor_username_key]['username']}): Failed to update own profile. Status: {response.status_code}, Response: {response.text}")
         success = False
-    
+
     # 3. Attempt to list ALL vendor profiles (should be denied or limited to own if not admin)
     logging.info(f"Vendor ({CREDENTIALS[vendor_username_key]['username']}): Attempting to list all vendors...")
     response = vendor_client.get("/vendors/")
@@ -181,7 +181,7 @@ def scenario_vendor_manage_own_profile(vendor_client, vendor_username_key="vendo
     else:
         logging.error(f"Vendor ({CREDENTIALS[vendor_username_key]['username']}): Error listing vendors. Status: {response.status_code}")
         success = False
-        
+
     return success
 
 def scenario_admin_manage_vendor_profiles(admin_client):
@@ -249,7 +249,7 @@ def scenario_admin_manage_vendor_profiles(admin_client):
     current_status = response.json().get("status")
     if current_status == "approved":
         new_status = "suspended"
-    
+
     payload = {"status": new_status}
     logging.info(f"Admin: Updating vendor profile ID {target_vendor_profile_id} status to '{new_status}'...")
     response = admin_client.patch(f"/vendors/{target_vendor_profile_id}/", data=payload)
@@ -258,7 +258,7 @@ def scenario_admin_manage_vendor_profiles(admin_client):
     else:
         logging.error(f"Admin: Failed to update vendor profile {target_vendor_profile_id} status. Status: {response.status_code}, Response: {response.text}")
         success = False
-        
+
     # 4. Delete a vendor profile - SKIPPING for now to keep test vendor profiles
     # logging.info("Admin: Deleting a vendor profile (skipped)...")
 
@@ -302,13 +302,13 @@ def scenario_public_view_vendors(guest_client):
         logging.info("Public: Vendor list is empty, skipping public detail view test.")
     else: # Listing was not successful (e.g. 401/403)
         logging.info("Public: Skipping detail view test as vendor listing was not accessible/successful.")
-        
+
     return success
 
 
 if __name__ == "__main__":
     logging.info("======== Starting Vendor API Tests ========")
-    
+
     admin_client = ApiClient(user_role="admin")
     vendor_client = ApiClient(user_role="vendor") # vendor_test_api_user
     # vendor2_client = ApiClient(user_role="vendor2") # vendor2_test_api_user - if needed for specific tests
@@ -330,7 +330,7 @@ if __name__ == "__main__":
     else:
         logging.error(f"Vendor ({CREDENTIALS['vendor']['username']}) client failed to authenticate. Skipping its tests.")
         results["vendor_manage_own_profile"] = False
-        
+
     if admin_client.token:
         results["admin_manage_vendor_profiles"] = scenario_admin_manage_vendor_profiles(admin_client)
     else:
@@ -346,7 +346,7 @@ if __name__ == "__main__":
         logging.info(f"Scenario '{test_name}': {status_msg}")
         if not success_status:
             all_passed = False
-    
+
     if all_passed:
         logging.info("All Vendor API scenarios passed (or were appropriately restricted)!")
     else:
