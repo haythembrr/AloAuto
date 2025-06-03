@@ -13,7 +13,7 @@ class Command(BaseCommand):
         fake = Faker()
         self.stdout.write("Starting to populate order-related data...")
 
-        buyer_users = list(User.objects.filter(user_type='buyer'))
+        buyer_users = list(User.objects.filter(role='buyer'))
         all_products = list(Product.objects.filter(is_active=True))
 
         if not buyer_users:
@@ -67,7 +67,7 @@ class Command(BaseCommand):
         order_items_to_create = []
         num_orders = random.randint(500, 1000)
 
-        possible_order_statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded']
+        possible_order_statuses = [s[0] for s in Order.STATUS_CHOICES]
 
         for i in range(num_orders):
             if i % 100 == 0 and i > 0:
@@ -188,8 +188,8 @@ class Command(BaseCommand):
                 order = Order.objects.create(
                     user=user,
                     # Assuming 'accounts.Address' has 'street', 'city', 'postal_code', 'country' fields for the snapshot
-                    shipping_address_snapshot=f"{shipping_address.street}, {shipping_address.city}, {shipping_address.postal_code}, {shipping_address.country}",
-                    billing_address_snapshot=f"{billing_address.street}, {billing_address.city}, {billing_address.postal_code}, {billing_address.country}",
+                    shipping_address_snapshot=f"{shipping_address.street}, {shipping_address.city}, {shipping_address.state}, {shipping_address.postal_code}, {shipping_address.country}",
+                    billing_address_snapshot=f"{billing_address.street}, {billing_address.city}, {billing_address.state}, {billing_address.postal_code}, {billing_address.country}",
                     status=order_status,
                     total_amount=0, # Will update
                     payment_method=random.choice(['credit_card', 'paypal', 'bank_transfer', 'cash_on_delivery']), # Ensure these are valid choices if Order.payment_method has choices

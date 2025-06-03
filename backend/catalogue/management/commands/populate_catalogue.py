@@ -4,7 +4,6 @@ from faker import Faker
 from catalogue.models import Category, Product, ProductImage
 from vendors.models import Vendor
 import random
-import json # For product attributes
 
 class Command(BaseCommand):
     help = 'Populates the database with sample catalogue data (Categories, Products, ProductImages)'
@@ -46,7 +45,7 @@ class Command(BaseCommand):
 
 
         self.stdout.write("Creating products...")
-        all_vendors = list(Vendor.objects.filter(status='approved'))
+        all_vendors = list(Vendor.objects.filter(status='active'))
         if not all_vendors:
             self.stdout.write(self.style.WARNING('No approved vendors found. Products will not be assigned to any vendor.'))
 
@@ -86,7 +85,7 @@ class Command(BaseCommand):
                 "price": round(random.uniform(10, 1000), 2),
                 "stock_quantity": random.randint(0, 200),
                 "is_active": random.choices([True, False], weights=[0.9, 0.1], k=1)[0],
-                "attributes": json.dumps(attributes), # Store as JSON string
+                "attributes": attributes, # Store as JSON string
                 "weight": round(random.uniform(0.1, 50), 2) if random.choice([True, False]) else None,
                 "dimensions": f"{random.randint(1,100)}x{random.randint(1,100)}x{random.randint(1,100)}" if random.choice([True, False]) else None, # LxWxH cm
             }

@@ -12,7 +12,7 @@ class Command(BaseCommand):
         fake = Faker()
         self.stdout.write("Creating vendors...")
 
-        vendor_users = User.objects.filter(user_type='vendor')
+        vendor_users = User.objects.filter(role='vendor')
         if not vendor_users.exists():
             self.stdout.write(self.style.WARNING('No vendor users found. Please populate accounts first.'))
             return
@@ -40,10 +40,10 @@ class Command(BaseCommand):
                 slug=slug,
                 description=fake.text(max_nb_chars=500),
                 contact_email=user.email, # Or a different contact email
-                contact_phone=user.phone_number, # Or a different contact phone
+                contact_phone=user.phone, # Or a different contact phone
                 address=fake.address(), # This might need to be structured if Address model is linked
                 website=fake.url() if random.choice([True, False]) else None,
-                status=random.choice(['pending', 'approved', 'rejected', 'suspended']),
+                status=random.choice([s[0] for s in Vendor.STATUS_CHOICES]),
                 tax_number=tax_number,
                 registration_date=fake.past_date(),
                 # logo - skip for now, or use a placeholder path if model allows

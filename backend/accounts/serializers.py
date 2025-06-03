@@ -7,7 +7,8 @@ User = get_user_model()
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
-        fields = ['id', 'street', 'city', 'state', 'postal_code', 'country', 'is_default']
+        fields = ['id', 'street', 'city', 'state', 'postal_code', 'country', 'is_default_shipping', 'is_default_billing', 'created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at']
 
 class UserSerializer(serializers.ModelSerializer):
     addresses = AddressSerializer(many=True, read_only=True)

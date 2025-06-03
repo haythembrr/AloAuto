@@ -28,7 +28,7 @@ class Command(BaseCommand):
             "Question about a product", "Account help needed", "Return request query",
             "Website bug report", "Feature request"
         ]
-        possible_statuses = ['open', 'in_progress', 'resolved', 'closed', 'pending_customer']
+        possible_statuses = [choice[0] for choice in Ticket.STATUS_CHOICES]
         possible_priorities = ['low', 'medium', 'high', 'urgent']
 
         for i in range(num_tickets):
