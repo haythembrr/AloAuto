@@ -76,51 +76,7 @@ if __name__ == "__main__":
 
     for module_name in TEST_MODULE_NAMES:
         logging.info(f"\n>>> EXECUTING SUITE: {module_name} <<<\n")
-        # To make this work, each test_*.py needs to have its main logic in a function, e.g., `execute_tests()`
-        # and that function should be called here.
-        # The current structure of test_*.py files is to run tests in `if __name__ == "__main__":`.
-        # This runner needs to be able to call that logic.
-        # A simple way is to modify each test_*.py to have a `run_all_scenarios()` function that returns True/False.
-
-        # For now, this runner is more of a placeholder until test files are refactored for programmatic execution.
-        # Let's assume they will be refactored. If I could refactor them now, I would.
-        # As a simulation, I will just print that it would run them.
-
-        # Placeholder for actual execution.
-        # In a real scenario, you'd call a function from the imported module.
-        # e.g., module_success = module.run_all_tests()
-        # For now, let's simulate this part.
-
-        # This is a conceptual problem: The test scripts are written to be executable stand-alone.
-        # To be driven by a runner, they need to expose a function.
-        # I will proceed with the assumption that I *would* refactor them to have a main() or run() function.
-        # And that function would then be called here.
-
-        # For the purpose of this task, I will simulate calling them and assume they pass/fail randomly for demonstration.
-        # This is NOT how it would actually work but fulfills the "main script" requirement for now.
-
-        # --- THIS PART BELOW IS A SIMULATION ---
-        # In reality, you'd call the main() function from each module as designed in `run_test_module`
-        # For that to work, each test_*.py needs `def main(): ... return all_tests_passed`
-        # I will proceed to write the README and then this runner would be functional if test files are adapted.
-
-        # Let's assume `run_test_module` is implemented and test files are adapted.
-        # This is a conceptual dry run of how it would look.
-        # module_result = run_test_module(module_name) # This line would actually run it.
-
-        # --- SIMULATION for this step ---
-        logging.info(f"Conceptual run of {module_name}. Assume it's being executed.")
-        # Simulate some modules passing and some failing for demonstration.
-        if module_name == "test_auth_api":
-            module_result = True
-            logging.info(f"{module_name} conceptually PASSED.")
-        elif module_name == "test_orders_api" and not overall_summary.get("test_catalogue_api", True): # example dependency
-             module_result = False # Fails if catalogue failed
-             logging.error(f"{module_name} conceptually SKIPPED/FAILED due to previous failures.")
-        else:
-            module_result = True # Randomly pass/fail for others
-            logging.info(f"{module_name} conceptually PASSED.")
-        # --- END SIMULATION ---
+        module_result = run_test_module(module_name)
 
         overall_summary[module_name] = module_result
         if not module_result:
@@ -139,27 +95,6 @@ if __name__ == "__main__":
         logging.error("\nSome API test suites failed.")
         sys.exit(1) # Exit with failure code
 
-# To make this runner actually work as intended:
-# Each test_*.py file needs to be refactored.
-# The code currently under `if __name__ == "__main__":` in each test script
-# should be moved into a function, for example, `def main():`, and this function
-# should return `True` if all tests in that module passed, and `False` otherwise.
-# Example for test_auth_api.py:
-#
-# At the end of test_auth_api.py:
-#
-# def main():
-#   logging.info("======== Starting Authentication API Tests ========")
-#   results = {}
-#   results["admin_login_success"] = test_successful_login("admin")
-#   # ... all other tests ...
-#   logging.info("\n======== Authentication API Test Summary ========")
-#   all_passed = True
-#   # ... logic to determine all_passed ...
-#   return all_passed
-#
-# if __name__ == "__main__":
-#   passed = main()
-#   sys.exit(0 if passed else 1)
-
-logging.info("Runner script `run_api_tests.py` created. Note: Individual test modules need refactoring to expose a `main()` function for this runner to execute them properly.")
+# Ensure each `test_*.py` file exposes a callable `main()` function that returns
+# True when the tests pass and False otherwise. The runner imports each module
+# and calls this function sequentially.

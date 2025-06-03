@@ -607,9 +607,9 @@ def scenario_admin_manage_any_product(admin_client):
     return success
 
 
-if __name__ == "__main__":
+def main():
     logging.info("======== Starting Catalogue API Tests ========")
-    import random # for product_sku
+    import random  # for product_sku
 
     guest_client = ApiClient(user_role="guest")
     admin_client = ApiClient(user_role="admin")
@@ -626,54 +626,75 @@ if __name__ == "__main__":
         logging.error("Admin client not authenticated. Skipping admin category tests.")
         results["admin_manage_categories"] = False
 
-    if vendor_client.token and admin_client.token: # admin_client needed for setup (category check)
-        results["vendor_manage_own_products"] = scenario_vendor_manage_own_products(vendor_client, admin_client)
+    if vendor_client.token and admin_client.token:
+        # admin_client needed for setup (category check)
+        results["vendor_manage_own_products"] = scenario_vendor_manage_own_products(
+            vendor_client, admin_client
+        )
     elif not vendor_client.token:
         logging.error("Vendor client not authenticated. Skipping vendor product tests.")
         results["vendor_manage_own_products"] = False
     elif not admin_client.token:
-        logging.error("Admin client not authenticated. Skipping vendor product tests (admin needed for setup).")
+        logging.error(
+            "Admin client not authenticated. Skipping vendor product tests (admin needed for setup)."
+        )
         results["vendor_manage_own_products"] = False
 
-
     if admin_client.token:
-    # This test depends on a product being available and will delete it.
-    # Run it after tests that might need this product (e.g. filter tests if it's part of setup for them)
-    # However, filter tests should create their own products.
+        # This test depends on a product being available and will delete it.
+        # Run it after tests that might need this product (e.g. filter tests if it's part of setup for them)
+        # However, filter tests should create their own products.
         results["admin_manage_any_product"] = scenario_admin_manage_any_product(admin_client)
 
     # New scenario for filtering, searching, ordering
-    if admin_client.token and vendor_client.token : # Needs admin for setup, vendor for creating under specific vendor
-         # Get vendor profile IDs for filter test setup
-        _, vendor1_profile_id = get_user_id_and_vendor_profile_id(admin_client, CREDENTIALS["vendor"]["username"])
-        _, vendor2_profile_id = get_user_id_and_vendor_profile_id(admin_client, CREDENTIALS.get("vendor2", {}).get("username", "vendor2_test_api_user")) # Assuming vendor2 exists
+    if admin_client.token and vendor_client.token:
+        # Needs admin for setup, vendor for creating under specific vendor
+        # Get vendor profile IDs for filter test setup
+        _, vendor1_profile_id = get_user_id_and_vendor_profile_id(
+            admin_client, CREDENTIALS["vendor"]["username"]
+        )
+        _, vendor2_profile_id = get_user_id_and_vendor_profile_id(
+            admin_client,
+            CREDENTIALS.get("vendor2", {}).get("username", "vendor2_test_api_user"),
+        )  # Assuming vendor2 exists
 
-        if not vendor2_profile_id and CREDENTIALS.get("vendor2"): # If vendor2 is defined in CREDENTIALS but no profile, try to create user and profile
+        if not vendor2_profile_id and CREDENTIALS.get("vendor2"):
+            # If vendor2 is defined in CREDENTIALS but no profile, try to create user and profile
             logging.info("Setting up vendor2 for filter tests...")
-            v2_user_payload = {"username": CREDENTIALS["vendor2"]["username"], "email": "filter_vendor2@example.com", "password": "password123", "role": "vendor"}
+            v2_user_payload = {
+                "username": CREDENTIALS["vendor2"]["username"],
+                "email": "filter_vendor2@example.com",
+                "password": "password123",
+                "role": "vendor",
+            }
             v2_user_resp = admin_client.post("/accounts/users/", data=v2_user_payload)
-            if v2_user_resp.status_code == 201 :
-                 v2_user_id = v2_user_resp.json().get("id")
-                 # Assuming vendor profile is auto-created or can be created. For now, just get ID again.
-                 _, vendor2_profile_id = get_user_id_and_vendor_profile_id(admin_client, CREDENTIALS["vendor2"]["username"])
+            if v2_user_resp.status_code == 201:
+                v2_user_id = v2_user_resp.json().get("id")
+                # Assuming vendor profile is auto-created or can be created. For now, just get ID again.
+                _, vendor2_profile_id = get_user_id_and_vendor_profile_id(
+                    admin_client, CREDENTIALS["vendor2"]["username"]
+                )
             else:
-                logging.error(f"Could not create/setup vendor2 for filter tests. Status: {v2_user_resp.status_code}, Response: {v2_user_resp.text}")
+                logging.error(
+                    f"Could not create/setup vendor2 for filter tests. Status: {v2_user_resp.status_code}, Response: {v2_user_resp.text}"
+                )
 
-
-        if vendor1_profile_id : # At least one vendor needed
-            results["filter_search_order_products"] = scenario_filter_search_order_products(admin_client, vendor_client, vendor1_profile_id, vendor2_profile_id)
+        if vendor1_profile_id:
+            # At least one vendor needed
+            results["filter_search_order_products"] = scenario_filter_search_order_products(
+                admin_client, vendor_client, vendor1_profile_id, vendor2_profile_id
+            )
         else:
             logging.error("Vendor1 profile ID not found. Skipping filter/search/order tests.")
             results["filter_search_order_products"] = False
 
-    else:
+    elif not admin_client.token or not vendor_client.token:
         logging.error("Admin or Vendor client not authenticated. Skipping filter/search/order tests.")
         results["filter_search_order_products"] = False
 
     else:
         logging.error("Admin client not authenticated. Skipping admin product management tests.")
         results["admin_manage_any_product"] = False
-
 
     logging.info("\n======== Catalogue API Test Summary ========")
     all_passed = True
