@@ -11,7 +11,7 @@ def test_successful_login(user_role):
         # Clear existing token for this role to force a new login
         if user_role in USER_TOKENS:
             del USER_TOKENS[user_role]
-            
+
         client = ApiClient(user_role=user_role)
         assert client.token is not None, f"Token should not be None for {user_role}"
         assert client.user_role == user_role, f"Client user_role should be {user_role}"
@@ -25,7 +25,7 @@ def test_invalid_login(user_role):
     logging.info(f"--- Test: Invalid Login for {user_role.upper()} (bad password) ---")
     original_password = CREDENTIALS[user_role]["password"]
     CREDENTIALS[user_role]["password"] = "wrongpassword123"
-    
+
     # Clear any cached token for this role
     if user_role in USER_TOKENS:
         del USER_TOKENS[user_role]
@@ -56,7 +56,7 @@ def test_invalid_username_login():
     user_role = "non_existent_user"
     # Temporarily add to CREDENTIALS for ApiClient structure, but it won't exist in DB
     CREDENTIALS[user_role] = {"username": "iamnotrealuser", "password": "anypassword"}
-    
+
     if user_role in USER_TOKENS: # Should not be the case
         del USER_TOKENS[user_role]
 
@@ -80,9 +80,9 @@ def test_invalid_username_login():
 
 if __name__ == "__main__":
     logging.info("======== Starting Authentication API Tests ========")
-    
+
     results = {}
-    
+
     # Test successful logins
     results["admin_login_success"] = test_successful_login("admin")
     results["vendor_login_success"] = test_successful_login("vendor")
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     # Ensure tokens from successful logins are cleared before these tests for the same roles
     if "admin" in USER_TOKENS: del USER_TOKENS["admin"]
     results["admin_login_invalid_password"] = test_invalid_login("admin")
-    
+
     if "vendor" in USER_TOKENS: del USER_TOKENS["vendor"]
     results["vendor_login_invalid_password"] = test_invalid_login("vendor")
 
@@ -109,7 +109,7 @@ if __name__ == "__main__":
         logging.info(f"Test '{test_name}': {status}")
         if not success:
             all_passed = False
-    
+
     if all_passed:
         logging.info("All authentication API tests passed!")
     else:

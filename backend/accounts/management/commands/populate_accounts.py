@@ -12,7 +12,7 @@ class Command(BaseCommand):
         STANDARD_PASSWORD = "password123" # Consistent password for test users
 
         self.stdout.write("Creating users...")
-        
+
         users_to_create_spec = [
             {"username": "admin_test_api_user", "email": "admintest@example.com", "user_type": "admin", "is_staff": True, "is_superuser": True},
             {"username": "vendor_test_api_user", "email": "vendortest@example.com", "user_type": "vendor", "is_staff": False, "is_superuser": False},
@@ -30,7 +30,7 @@ class Command(BaseCommand):
                     password=make_password(STANDARD_PASSWORD),
                     first_name=fake.first_name(),
                     last_name=fake.last_name(),
-                    phone=fake.phone_number(), # Changed from phone_number
+                    phone=fake.phone_number()[:20], # Changed from phone_number
                     is_staff=spec["is_staff"],
                     is_superuser=spec["is_superuser"],
                     role=spec["user_type"] # Changed from user_type
@@ -54,7 +54,7 @@ class Command(BaseCommand):
                 password=make_password(STANDARD_PASSWORD),
                 first_name=fake.first_name(),
                 last_name=fake.last_name(),
-                phone=fake.phone_number(), # Changed from phone_number
+                phone=fake.phone_number()[:20], # Changed from phone_number
                 is_staff=True,
                 is_superuser=True,
                 role='admin' # Changed from user_type
@@ -76,28 +76,28 @@ class Command(BaseCommand):
                 password=make_password(STANDARD_PASSWORD),
                 first_name=fake.first_name(),
                 last_name=fake.last_name(),
-                phone=fake.phone_number(), # Changed from phone_number
+                phone=fake.phone_number()[:20], # Changed from phone_number
                 is_staff=False,
                 is_superuser=False,
                 role='vendor' # Changed from user_type
             ))
-        
+
         # Create additional Buyer Users
         # Aim for ~1000 users total. Current count is len(users).
         # remaining_users = 1000 - User.objects.count() - len(users) # This line is problematic as users are not yet created
         # Let's calculate based on what we plan to create vs target total
-        
+
         # Calculate how many users we have specified or are planning to create so far
         current_planned_users = len(users) # This includes specific test users and additional admins/vendors
-        
+
         # Target total users (approx)
-        total_target_users = 1000
-        
+        total_target_users = 100
+
         # How many more buyers to create
         num_additional_buyers = total_target_users - current_planned_users
         if num_additional_buyers < 0: # If we already met target with admins/vendors
             num_additional_buyers = 0
-            
+
         self.stdout.write(f"Planning to create {num_additional_buyers} additional buyer users.")
 
         for i in range(num_additional_buyers):
@@ -109,7 +109,7 @@ class Command(BaseCommand):
                 counter += 1
                 temp_username = f"{username}_{counter}"
             username = temp_username
-            
+
             email = fake.email()
             temp_email = email
             counter = 0
@@ -118,19 +118,19 @@ class Command(BaseCommand):
                 counter +=1
                 temp_email = f"{counter}{email}" # Prepending counter to change it more significantly
             email = temp_email
-            
+
             users.append(User(
                 username=username,
                 email=email,
                 password=make_password(STANDARD_PASSWORD),
                 first_name=fake.first_name(),
                 last_name=fake.last_name(),
-                phone=fake.phone_number(), # Changed from phone_number, Generic phone number
+                phone=fake.phone_number()[:20], # Changed from phone_number, Generic phone number
                 is_staff=False,
                 is_superuser=False,
                 role='buyer' # Changed from user_type
             ))
-        
+
         User.objects.bulk_create(users, ignore_conflicts=True) # ignore_conflicts might hide issues with username/email generation if not careful
         self.stdout.write(self.style.SUCCESS(f'Successfully created {User.objects.count()} users.'))
 
@@ -153,16 +153,16 @@ class Command(BaseCommand):
                     is_default_shipping=is_first_address_for_user, # First address is default
                     is_default_billing=is_first_address_for_user,  # First address is default
                 ))
-        
-        # For simplicity, bulk_create addresses. 
+
+        # For simplicity, bulk_create addresses.
         # The logic for unique default addresses per user is handled above during generation.
         # If signals or more complex logic were needed upon Address save, this would need to be individual .create() or smaller batches.
         Address.objects.bulk_create(addresses_to_create)
         self.stdout.write(self.style.SUCCESS(f'Successfully created {Address.objects.count()} addresses.'))
 
         # The previous post-bulk_create step for default addresses is no longer needed as it's handled during list construction.
-        # However, if `ignore_conflicts=True` was planned for Address bulk_create (it's not currently set), 
-        # and unique constraints on (user, is_default_shipping=True) were in place, 
+        # However, if `ignore_conflicts=True` was planned for Address bulk_create (it's not currently set),
+        # and unique constraints on (user, is_default_shipping=True) were in place,
         # then this simple pre-assignment might not be robust.
         # But without such constraints, this is fine. The models currently don't enforce unique default addresses.
 

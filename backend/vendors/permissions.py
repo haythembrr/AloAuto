@@ -12,12 +12,11 @@ class IsVendorOwner(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        # Write permissions are only allowed to the user associated with the vendor.
-        # Assumes the Vendor model 'obj' has a 'user' ForeignKey field.
-        # Adjust 'user' to the actual field name on your Vendor model that links to the User model.
+        # Admin users have all permissions for write operations as well
+        if request.user and hasattr(request.user, 'role') and request.user.role == 'admin':
+            return True
+
+        # Write permissions are only allowed to the user associated with the vendor for non-admins.
         if hasattr(obj, 'user'):
             return obj.user == request.user
-        # If the vendor object itself is the user (e.g. for a Vendor profile that is a User proxy model)
-        # elif isinstance(obj, request.user.__class__): # Check if obj is a User instance
-        #     return obj == request.user
         return False

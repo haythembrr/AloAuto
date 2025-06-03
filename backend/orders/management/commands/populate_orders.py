@@ -13,7 +13,7 @@ class Command(BaseCommand):
         fake = Faker()
         self.stdout.write("Starting to populate order-related data...")
 
-        buyer_users = list(User.objects.filter(user_type='buyer'))
+        buyer_users = list(User.objects.filter(role='buyer'))
         all_products = list(Product.objects.filter(is_active=True))
 
         if not buyer_users:
@@ -28,15 +28,15 @@ class Command(BaseCommand):
         carts_created_count = 0
         cart_items_created_count = 0
         users_for_cart = random.sample(buyer_users, k=int(len(buyer_users) * random.uniform(0.5, 0.7)))
-        
+
         for user in users_for_cart:
             cart, created = Cart.objects.get_or_create(user=user) # Assuming Cart has a OneToOne or ForeignKey to User
             if created:
                 carts_created_count +=1
-            
+
             num_cart_items = random.randint(1, 5)
             products_in_cart = random.sample(all_products, k=min(num_cart_items, len(all_products)))
-            
+
             for product in products_in_cart:
                 if product.stock_quantity > 0:
                     quantity = random.randint(1, min(5, product.stock_quantity))
@@ -54,11 +54,11 @@ class Command(BaseCommand):
             wishlist, created = Wishlist.objects.get_or_create(user=user)
             if created:
                 wishlists_created_count +=1
-            
+
             num_wishlist_items = random.randint(1, 10)
             products_in_wishlist = random.sample(all_products, k=min(num_wishlist_items, len(all_products)))
             wishlist.products.add(*products_in_wishlist) # Add products to ManyToManyField
-            
+
         self.stdout.write(self.style.SUCCESS(f'Successfully created {wishlists_created_count} wishlists and added items to them.'))
 
         # Create Orders & OrderItems
@@ -66,8 +66,8 @@ class Command(BaseCommand):
         orders_to_create = []
         order_items_to_create = []
         num_orders = random.randint(500, 1000)
-        
-        possible_order_statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded']
+
+        possible_order_statuses = [s[0] for s in Order.STATUS_CHOICES]
 
         for i in range(num_orders):
             if i % 100 == 0 and i > 0:
@@ -79,7 +79,7 @@ class Command(BaseCommand):
             if not user_addresses.exists():
                 self.stdout.write(self.style.WARNING(f"User {user.username} has no addresses, cannot create order. Skipping."))
                 continue # Skip if no address
-            
+
             shipping_address = user_addresses.filter(is_default_shipping=True).first() or user_addresses.first()
             billing_address = user_addresses.filter(is_default_billing=True).first() or user_addresses.first()
 
@@ -88,8 +88,8 @@ class Command(BaseCommand):
 
             order_data = {
                 "user": user,
-                "shipping_address_snapshot": f"{shipping_address.street_address}, {shipping_address.city}, {shipping_address.postal_code}", # Simplified snapshot
-                "billing_address_snapshot": f"{billing_address.street_address}, {billing_address.city}, {billing_address.postal_code}", # Simplified snapshot
+                "shipping_address_snapshot": f"{shipping_address.street}, {shipping_address.city}, {shipping_address.postal_code}", # Simplified snapshot
+                "billing_address_snapshot": f"{billing_address.street}, {billing_address.city}, {billing_address.postal_code}", # Simplified snapshot
                 "status": order_status,
                 "total_amount": 0, # Will be calculated from items
                 "payment_method": random.choice(['credit_card', 'paypal', 'bank_transfer', 'cash_on_delivery']),
@@ -109,21 +109,21 @@ class Command(BaseCommand):
                 if product.stock_quantity > 0:
                     quantity = random.randint(1, min(3, product.stock_quantity))
                     price_at_purchase = product.price # Assuming price doesn't change for this script
-                    
+
                     # Decrement stock (if Order model doesn't handle this via signals)
                     # For bulk_create, this needs to be handled carefully or post-creation.
                     # Product.objects.filter(id=product.id).update(stock_quantity=F('stock_quantity') - quantity)
-                    
+
                     item_total = price_at_purchase * quantity
                     order_total_amount += item_total
-                    
+
                     current_order_items.append(OrderItem(
                         order=order, # This will be set after order is saved if using bulk_create for orders first
                         product=product,
                         quantity=quantity,
                         price_at_purchase=price_at_purchase
                     ))
-            
+
             if not current_order_items: # Skip order if no items could be added
                 continue
 
@@ -137,13 +137,13 @@ class Command(BaseCommand):
         # For now, using bulk_create.
         created_orders = Order.objects.bulk_create(orders_to_create)
         self.stdout.write(self.style.SUCCESS(f'Successfully created {len(created_orders)} orders in memory.'))
-        
+
         # Now create OrderItems, linking them to the created_orders
         # This requires re-fetching orders or matching them if bulk_create doesn't return them in a predictable way with IDs.
         # A safer way is to save orders one by one or in small batches and then their items.
         # For simplicity, let's assume we re-iterate what we prepared.
         # This is NOT the most efficient way for bulk.
-        
+
         final_order_items_to_create = []
         order_idx = 0
         # This assumes orders_to_create and created_orders are in the same order.
@@ -162,7 +162,7 @@ class Command(BaseCommand):
 
         # For now, let's try a simplified linking assuming order of 'created_orders' matches 'orders_to_create'
         # This is fragile. A better way is to not use bulk_create for orders if items depend on their PKs immediately.
-        
+
         # Let's try saving orders individually to get PKs for items. This is safer.
         Order.objects.all().delete() # Clear any previously bulk_created orders for this run
         OrderItem.objects.all().delete() # Clear previous items
@@ -177,7 +177,7 @@ class Command(BaseCommand):
             for _ in range(num_orders_for_user):
                 if final_orders_created_count >= num_orders:
                     break
-                
+
                 user_addresses = user.addresses.all()
                 if not user_addresses.exists(): continue
                 shipping_address = user_addresses.filter(is_default_shipping=True).first() or user_addresses.first()
@@ -187,17 +187,18 @@ class Command(BaseCommand):
 
                 order = Order.objects.create(
                     user=user,
-                    shipping_address_snapshot=f"{shipping_address.street_address}, {shipping_address.city}",
-                    billing_address_snapshot=f"{billing_address.street_address}, {billing_address.city}",
+                    # Assuming 'accounts.Address' has 'street', 'city', 'postal_code', 'country' fields for the snapshot
+                    shipping_address_snapshot=f"{shipping_address.street}, {shipping_address.city}, {shipping_address.state}, {shipping_address.postal_code}, {shipping_address.country}",
+                    billing_address_snapshot=f"{billing_address.street}, {billing_address.city}, {billing_address.state}, {billing_address.postal_code}, {billing_address.country}",
                     status=order_status,
                     total_amount=0, # Will update
-                    payment_method=random.choice(['credit_card', 'paypal', 'bank_transfer', 'cash_on_delivery']),
-                    shipping_method=random.choice(['standard', 'express']),
+                    payment_method=random.choice(['credit_card', 'paypal', 'bank_transfer', 'cash_on_delivery']), # Ensure these are valid choices if Order.payment_method has choices
+                    shipping_method=random.choice(['standard', 'express']), # Ensure these are valid choices if Order.shipping_method has choices
                     created_at=order_date,
                     updated_at=order_date if order_status == 'pending' else fake.date_time_between(start_date=order_date, end_date="now", tzinfo=timezone.get_current_timezone())
                 )
                 final_orders_created_count += 1
-                
+
                 current_order_total = 0
                 items_for_this_order_instances = []
                 num_items_in_order = random.randint(1, 7)
@@ -208,13 +209,16 @@ class Command(BaseCommand):
                         quantity = random.randint(1, min(3, product.stock_quantity))
                         price = product.price
                         current_order_total += (price * quantity)
+                        item_total_price = round(quantity * price, 2)
                         items_for_this_order_instances.append(OrderItem(
                             order=order,
                             product=product,
                             quantity=quantity,
-                            price_at_purchase=price
+                            price_at_purchase=price,
+                            unit_price=price,  # Set unit_price to price_at_purchase
+                            total_price=item_total_price # Calculated total_price for the item
                         ))
-                
+
                 if items_for_this_order_instances:
                     OrderItem.objects.bulk_create(items_for_this_order_instances)
                     order_item_count += len(items_for_this_order_instances)

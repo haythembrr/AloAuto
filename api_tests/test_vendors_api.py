@@ -41,7 +41,7 @@ def get_user_id_and_vendor_profile_id(client, target_username):
     # 2. Get Vendor Profile ID using the User ID (assuming vendor profiles are linked via user_id)
     # The endpoint /vendors/ might list all vendors (for admin) or filter by current user (for vendor)
     # Or there might be a /vendors/?user_id={user_id} or /vendors/my-profile/
-    
+
     # Try fetching vendor profile assuming the client is the vendor themselves
     if CREDENTIALS.get(client.user_role, {}).get("username") == target_username:
         logging.info(f"Attempting to fetch vendor profile for self ({target_username}) via /vendors/my-profile/ or similar...")
@@ -97,11 +97,11 @@ def get_user_id_and_vendor_profile_id(client, target_username):
                 elif isinstance(user_info, dict): # Nested object
                     if user_info.get("id") == user_id or user_info.get("username") == target_username:
                         user_matches = True
-                
+
                 if user_matches:
                     vendor_profile_id = vendor.get("id")
                     break
-    
+
     if vendor_profile_id:
         logging.info(f"Found vendor profile ID for user {target_username} (User ID: {user_id}): {vendor_profile_id}")
     else:
@@ -114,7 +114,7 @@ def get_user_id_and_vendor_profile_id(client, target_username):
 def scenario_vendor_manage_own_profile(vendor_client, vendor_username_key="vendor"):
     logging.info(f"--- Scenario: Vendor ({CREDENTIALS[vendor_username_key]['username']}) Manages Own Profile ---")
     success = True
-    
+
     vendor_user_id, vendor_profile_id = get_user_id_and_vendor_profile_id(vendor_client, CREDENTIALS[vendor_username_key]["username"])
 
     if not vendor_user_id:
@@ -136,30 +136,71 @@ def scenario_vendor_manage_own_profile(vendor_client, vendor_username_key="vendo
 
     # 1. Retrieve own vendor profile
     logging.info(f"Vendor ({CREDENTIALS[vendor_username_key]['username']}): Retrieving own vendor profile (ID: {vendor_profile_id})...")
-    # Common REST pattern: /api/vendors/{id}/
     response = vendor_client.get(f"/vendors/{vendor_profile_id}/")
     if response.status_code == 200:
-        logging.info(f"Vendor ({CREDENTIALS[vendor_username_key]['username']}): Successfully retrieved own profile. Company: {response.json().get('company_name')}")
+        profile_data = response.json()
+        logging.info(f"Vendor ({CREDENTIALS[vendor_username_key]['username']}): Successfully retrieved own profile. Company: {profile_data.get('company_name')}")
+
+        # Task 1: Assertions for all fields
+        expected_fields = [
+            'id', 'user', 'user_email', 'user_name', 'company_name', 'slug',
+            'description', 'contact_email', 'contact_phone', 'address', 'website',
+            'tax_number', 'status', 'bank_info', 'logo', 'registration_date',
+            'created_at', 'updated_at'
+        ]
+        missing_fields = [field for field in expected_fields if field not in profile_data]
+        if missing_fields:
+            logging.error(f"Vendor ({CREDENTIALS[vendor_username_key]['username']}): Missing fields in retrieved profile: {missing_fields}")
+            success = False
+        else:
+            logging.info(f"Vendor ({CREDENTIALS[vendor_username_key]['username']}): All expected fields present in profile.")
     else:
         logging.error(f"Vendor ({CREDENTIALS[vendor_username_key]['username']}): Failed to retrieve own profile. Status: {response.status_code}, Response: {response.text}")
         success = False
 
-    # 2. Update own vendor profile
-    updated_description = f"Updated description by {CREDENTIALS[vendor_username_key]['username']} at {logging.getLogger().name}" # Ensure it's unique enough for test
-    payload = {"description": updated_description, "user": vendor_user_id} # 'user' might be read-only or not required in payload
-    
-    logging.info(f"Vendor ({CREDENTIALS[vendor_username_key]['username']}): Updating own vendor profile (ID: {vendor_profile_id})...")
-    response = vendor_client.patch(f"/vendors/{vendor_profile_id}/", data=payload)
-    if response.status_code == 200:
-        if response.json().get("description") == updated_description:
-            logging.info(f"Vendor ({CREDENTIALS[vendor_username_key]['username']}): Successfully updated own profile description.")
-        else:
-            logging.error(f"Vendor ({CREDENTIALS[vendor_username_key]['username']}): Profile description update seemed to succeed (200 OK) but content mismatch. Expected '{updated_description}', got '{response.json().get('description')}'")
-            success = False
-    else:
-        logging.error(f"Vendor ({CREDENTIALS[vendor_username_key]['username']}): Failed to update own profile. Status: {response.status_code}, Response: {response.text}")
-        success = False
-    
+    # 2. Update own vendor profile (Task 2: Add more fields)
+    if success: # Proceed only if retrieval was successful
+        update_payloads = {
+            "description": f"Updated description by {CREDENTIALS[vendor_username_key]['username']} at {logging.getLogger().name}",
+            "company_name": f"New Company Name by {CREDENTIALS[vendor_username_key]['username']}",
+            "contact_email": f"contact_{CREDENTIALS[vendor_username_key]['username']}@example.com",
+            "contact_phone": "123-456-7890",
+            "address": "123 Updated St, UpdateVille, UP, 98765, UpdateLand",
+            "website": "https://updated.example.com",
+            "bank_info": "Updated Bank Info: ACC 987654321", # Assuming string for simplicity
+            "registration_date": "2023-01-15" # Example date
+        }
+
+        for field_name, new_value in update_payloads.items():
+            logging.info(f"Vendor ({CREDENTIALS[vendor_username_key]['username']}): Updating {field_name} to '{new_value}'...")
+            # Note: 'user' field is read-only and should not be in payload for update.
+            # The original payload had "user": vendor_user_id which might cause issues if not handled by serializer.
+            # For PATCH, only send fields to be updated.
+            payload = {field_name: new_value}
+            response_update = vendor_client.patch(f"/vendors/{vendor_profile_id}/", data=payload)
+
+            if response_update.status_code == 200:
+                updated_field_value = response_update.json().get(field_name)
+                # Special check for date as it might be formatted differently by API
+                if field_name == 'registration_date' and updated_field_value:
+                     # Assuming API returns date in YYYY-MM-DD format. Adjust if different.
+                    if str(updated_field_value).startswith(new_value): # Check if it starts with the date part
+                        logging.info(f"Vendor ({CREDENTIALS[vendor_username_key]['username']}): Successfully updated {field_name}.")
+                    else:
+                        logging.error(f"Vendor ({CREDENTIALS[vendor_username_key]['username']}): {field_name} update content mismatch. Expected '{new_value}', got '{updated_field_value}'")
+                        success = False
+                elif updated_field_value == new_value:
+                    logging.info(f"Vendor ({CREDENTIALS[vendor_username_key]['username']}): Successfully updated {field_name}.")
+                else:
+                    logging.error(f"Vendor ({CREDENTIALS[vendor_username_key]['username']}): {field_name} update content mismatch. Expected '{new_value}', got '{updated_field_value}'")
+                    success = False
+            else:
+                logging.error(f"Vendor ({CREDENTIALS[vendor_username_key]['username']}): Failed to update {field_name}. Status: {response_update.status_code}, Response: {response_update.text}")
+                success = False
+                break # Stop updating if one fails
+    else: # if initial retrieval failed
+        logging.warning(f"Vendor ({CREDENTIALS[vendor_username_key]['username']}): Skipping profile updates due to earlier failure.")
+
     # 3. Attempt to list ALL vendor profiles (should be denied or limited to own if not admin)
     logging.info(f"Vendor ({CREDENTIALS[vendor_username_key]['username']}): Attempting to list all vendors...")
     response = vendor_client.get("/vendors/")
@@ -181,7 +222,7 @@ def scenario_vendor_manage_own_profile(vendor_client, vendor_username_key="vendo
     else:
         logging.error(f"Vendor ({CREDENTIALS[vendor_username_key]['username']}): Error listing vendors. Status: {response.status_code}")
         success = False
-        
+
     return success
 
 def scenario_admin_manage_vendor_profiles(admin_client):
@@ -234,31 +275,71 @@ def scenario_admin_manage_vendor_profiles(admin_client):
         success = False
 
     # 2. Retrieve a specific vendor profile
+    retrieved_profile_data_admin = None
     logging.info(f"Admin: Retrieving vendor profile ID {target_vendor_profile_id}...")
-    response = admin_client.get(f"/vendors/{target_vendor_profile_id}/")
-    if response.status_code == 200:
-        logging.info(f"Admin: Successfully retrieved vendor profile {target_vendor_profile_id}. Company: {response.json().get('company_name')}")
+    response_get_vendor = admin_client.get(f"/vendors/{target_vendor_profile_id}/")
+    if response_get_vendor.status_code == 200:
+        retrieved_profile_data_admin = response_get_vendor.json()
+        logging.info(f"Admin: Successfully retrieved vendor profile {target_vendor_profile_id}. Company: {retrieved_profile_data_admin.get('company_name')}")
+
+        # Task 1: Assertions for all fields
+        expected_fields = [
+            'id', 'user', 'user_email', 'user_name', 'company_name', 'slug',
+            'description', 'contact_email', 'contact_phone', 'address', 'website',
+            'tax_number', 'status', 'bank_info', 'logo', 'registration_date',
+            'created_at', 'updated_at'
+        ]
+        missing_fields = [field for field in expected_fields if field not in retrieved_profile_data_admin]
+        if missing_fields:
+            logging.error(f"Admin: Missing fields in retrieved profile for {target_vendor_profile_id}: {missing_fields}")
+            success = False
+        else:
+            logging.info(f"Admin: All expected fields present in profile {target_vendor_profile_id}.")
     else:
-        logging.error(f"Admin: Failed to retrieve vendor profile {target_vendor_profile_id}. Status: {response.status_code}")
+        logging.error(f"Admin: Failed to retrieve vendor profile {target_vendor_profile_id}. Status: {response_get_vendor.status_code}")
         success = False
 
-    # 3. Update a vendor profile (e.g., change status - 'approve' or 'suspend')
-    # Assuming 'status' is a valid field. From populate_vendors, statuses include 'pending', 'approved', 'rejected', 'suspended'.
-    new_status = "approved" # Or "suspended" if already approved
-    # Check current status to toggle
-    current_status = response.json().get("status")
-    if current_status == "approved":
-        new_status = "suspended"
-    
-    payload = {"status": new_status}
-    logging.info(f"Admin: Updating vendor profile ID {target_vendor_profile_id} status to '{new_status}'...")
-    response = admin_client.patch(f"/vendors/{target_vendor_profile_id}/", data=payload)
-    if response.status_code == 200 and response.json().get("status") == new_status:
-        logging.info(f"Admin: Successfully updated vendor profile {target_vendor_profile_id} status to '{new_status}'.")
+    # 3. Update vendor status using custom action (Task 3 Corrected)
+    if success and retrieved_profile_data_admin: # Only if retrieval was fine
+        # We want to activate. If it's already active, this test might not be meaningful
+        # or could be skipped. For now, we assume activate always sets to 'active'.
+        # The Vendor model's actual STATUS_CHOICES are 'pending', 'active', 'suspended', 'rejected'
+        # The populate_vendors script uses 'pending', 'approved', 'rejected', 'suspended'
+        # The VendorViewSet activate action sets status to 'active'.
+        target_status_after_activate = "active"
+
+        logging.info(f"Admin: Activating vendor profile ID {target_vendor_profile_id} via POST to /activate/...")
+        response_activate = admin_client.post(f"/vendors/{target_vendor_profile_id}/activate/") # No data payload needed
+
+        if response_activate.status_code == 200 and response_activate.json().get("status") == target_status_after_activate:
+            logging.info(f"Admin: Successfully activated vendor profile {target_vendor_profile_id}. Status is now '{target_status_after_activate}'.")
+        else:
+            logging.error(f"Admin: Failed to activate vendor profile {target_vendor_profile_id}. Status: {response_activate.status_code}, Response: {response_activate.text}")
+            success = False
     else:
-        logging.error(f"Admin: Failed to update vendor profile {target_vendor_profile_id} status. Status: {response.status_code}, Response: {response.text}")
-        success = False
-        
+        logging.warning("Admin: Skipping vendor activation test due to earlier failure or no profile data.")
+
+    # 4. Admin updates other vendor fields (Task 4)
+    if success: # Proceed if previous steps were okay
+        admin_update_payloads = {
+            "company_name": "Admin Updated Company Inc.",
+            "description": "Admin updated the description of this vendor.",
+            "contact_email": "admin_updated_contact@example.com",
+            # Add more fields here if desired, e.g. tax_number, address etc.
+            # "tax_number": "TXNADMIN001"
+        }
+        for field_name, new_value in admin_update_payloads.items():
+            logging.info(f"Admin: Updating {field_name} for vendor {target_vendor_profile_id} to '{new_value}'...")
+            response_admin_update = admin_client.patch(f"/vendors/{target_vendor_profile_id}/", data={field_name: new_value})
+            if response_admin_update.status_code == 200 and response_admin_update.json().get(field_name) == new_value:
+                logging.info(f"Admin: Successfully updated {field_name} for vendor {target_vendor_profile_id}.")
+            else:
+                logging.error(f"Admin: Failed to update {field_name} for vendor {target_vendor_profile_id}. Status: {response_admin_update.status_code}, Response: {response_admin_update.text}")
+                success = False
+                break # Stop on first failure
+    else:
+        logging.warning("Admin: Skipping other vendor field updates by admin due to earlier failure.")
+
     # 4. Delete a vendor profile - SKIPPING for now to keep test vendor profiles
     # logging.info("Admin: Deleting a vendor profile (skipped)...")
 
@@ -302,13 +383,13 @@ def scenario_public_view_vendors(guest_client):
         logging.info("Public: Vendor list is empty, skipping public detail view test.")
     else: # Listing was not successful (e.g. 401/403)
         logging.info("Public: Skipping detail view test as vendor listing was not accessible/successful.")
-        
+
     return success
 
 
 if __name__ == "__main__":
     logging.info("======== Starting Vendor API Tests ========")
-    
+
     admin_client = ApiClient(user_role="admin")
     vendor_client = ApiClient(user_role="vendor") # vendor_test_api_user
     # vendor2_client = ApiClient(user_role="vendor2") # vendor2_test_api_user - if needed for specific tests
@@ -330,7 +411,7 @@ if __name__ == "__main__":
     else:
         logging.error(f"Vendor ({CREDENTIALS['vendor']['username']}) client failed to authenticate. Skipping its tests.")
         results["vendor_manage_own_profile"] = False
-        
+
     if admin_client.token:
         results["admin_manage_vendor_profiles"] = scenario_admin_manage_vendor_profiles(admin_client)
     else:
@@ -346,7 +427,7 @@ if __name__ == "__main__":
         logging.info(f"Scenario '{test_name}': {status_msg}")
         if not success_status:
             all_passed = False
-    
+
     if all_passed:
         logging.info("All Vendor API scenarios passed (or were appropriately restricted)!")
     else:

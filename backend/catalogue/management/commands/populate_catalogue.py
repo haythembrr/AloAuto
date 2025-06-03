@@ -4,7 +4,6 @@ from faker import Faker
 from catalogue.models import Category, Product, ProductImage
 from vendors.models import Vendor
 import random
-import json # For product attributes
 
 class Command(BaseCommand):
     help = 'Populates the database with sample catalogue data (Categories, Products, ProductImages)'
@@ -16,20 +15,21 @@ class Command(BaseCommand):
         categories_to_create = []
         for _ in range(random.randint(20, 50)): # 20-50 categories
             name = fake.unique.bs() # Using bs for category names
-            slug = slugify(name)
+            name_for_slug = name[:40] # Truncate for slug generation
+            slug = slugify(name_for_slug)
             original_slug = slug
             counter = 1
             while Category.objects.filter(slug=slug).exists():
                 slug = f"{original_slug}-{counter}"
                 counter += 1
-            
+
             categories_to_create.append(Category(
                 name=name,
                 slug=slug,
                 description=fake.text(max_nb_chars=200),
                 # parent category - will handle hierarchy in a second pass for simplicity
             ))
-        
+
         Category.objects.bulk_create(categories_to_create)
         self.stdout.write(self.style.SUCCESS(f'Successfully created {Category.objects.count()} base categories.'))
 
@@ -46,10 +46,11 @@ class Command(BaseCommand):
 
 
         self.stdout.write("Creating products...")
-        all_vendors = list(Vendor.objects.filter(status='approved'))
+        all_vendors = list(Vendor.objects.filter(status='active'))
         if not all_vendors:
-            self.stdout.write(self.style.WARNING('No approved vendors found. Products will not be assigned to any vendor.'))
-        
+            self.stdout.write(self.style.ERROR('No active vendors found. Cannot create products.'))
+            return # Exit if no active vendors
+
         if not all_categories:
             self.stdout.write(self.style.ERROR('No categories found. Cannot create products.'))
             return
@@ -59,9 +60,10 @@ class Command(BaseCommand):
         for i in range(num_products):
             if i % 500 == 0 and i > 0:
                 self.stdout.write(f"Preparing product {i} of {num_products}...")
-            
-            name = fake.ecommerce_name() # Placeholder for product name
-            slug = slugify(name)
+
+            name = fake.name() # Placeholder for product name
+            name_for_slug = name[:30] # Truncate for slug generation
+            slug = slugify(name_for_slug)
             original_slug = slug
             counter = 1
             while Product.objects.filter(slug=slug).exists(): # This check can be slow in a loop
@@ -75,7 +77,7 @@ class Command(BaseCommand):
                 "material": fake.word(),
                 "warranty": f"{random.randint(1, 3)} years"
             }
-            
+
             product_data = {
                 "name": name,
                 "slug": slug,
@@ -86,7 +88,7 @@ class Command(BaseCommand):
                 "price": round(random.uniform(10, 1000), 2),
                 "stock_quantity": random.randint(0, 200),
                 "is_active": random.choices([True, False], weights=[0.9, 0.1], k=1)[0],
-                "attributes": json.dumps(attributes), # Store as JSON string
+                "attributes": attributes, # Store as JSON string
                 "weight": round(random.uniform(0.1, 50), 2) if random.choice([True, False]) else None,
                 "dimensions": f"{random.randint(1,100)}x{random.randint(1,100)}x{random.randint(1,100)}" if random.choice([True, False]) else None, # LxWxH cm
             }
@@ -105,7 +107,7 @@ class Command(BaseCommand):
             batch = products_to_create[i:i + batch_size]
             Product.objects.bulk_create(batch, ignore_conflicts=True) # ignore_conflicts for slugs/skus if uniqueness check above fails
             self.stdout.write(f"Created batch of {len(batch)} products...")
-        
+
         total_products_created = Product.objects.count()
         self.stdout.write(self.style.SUCCESS(f'Successfully created {total_products_created} products.'))
 
@@ -120,10 +122,10 @@ class Command(BaseCommand):
                 product_images_to_create.append(ProductImage(
                     product=product,
                     image=image_path, # Assuming ImageField can take a path string
-                    alt_text=f"Image {i+1} for {product.name}",
+                    alt_text=f"Image {i+1} for {product.name[:220]}", # Truncate product name for alt_text
                     is_primary=(i == 0) # First image is primary
                 ))
-        
+
         # Bulk create product images
         ProductImage.objects.bulk_create(product_images_to_create)
         self.stdout.write(self.style.SUCCESS(f'Successfully created {ProductImage.objects.count()} product images.'))

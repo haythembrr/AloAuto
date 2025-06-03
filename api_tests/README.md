@@ -13,7 +13,7 @@ This directory contains Python scripts designed to test the API endpoints of the
 3.  **Python Environment**: Ensure Python 3 is installed.
 4.  **Dependencies**: Install required Python packages from the project's main `requirements.txt` file. This includes `requests` and `Faker` (used by population scripts).
     ```bash
-    pip install -r ../requirements.txt 
+    pip install -r ../requirements.txt
     # (Adjust path to requirements.txt if running from api_tests directory)
     # Or, if you have a separate requirements for tests: pip install -r requirements_tests.txt
     ```
