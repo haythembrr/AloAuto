@@ -78,7 +78,14 @@ def test_invalid_username_login():
             del USER_TOKENS[user_role]
 
 
-if __name__ == "__main__":
+def main():
+    """Execute authentication API test scenarios.
+
+    Returns
+    -------
+    bool
+        True if all scenarios passed, False otherwise.
+    """
     logging.info("======== Starting Authentication API Tests ========")
 
     results = {}
@@ -90,13 +97,16 @@ if __name__ == "__main__":
 
     # Test invalid logins (bad password)
     # Ensure tokens from successful logins are cleared before these tests for the same roles
-    if "admin" in USER_TOKENS: del USER_TOKENS["admin"]
+    if "admin" in USER_TOKENS:
+        del USER_TOKENS["admin"]
     results["admin_login_invalid_password"] = test_invalid_login("admin")
 
-    if "vendor" in USER_TOKENS: del USER_TOKENS["vendor"]
+    if "vendor" in USER_TOKENS:
+        del USER_TOKENS["vendor"]
     results["vendor_login_invalid_password"] = test_invalid_login("vendor")
 
-    if "buyer" in USER_TOKENS: del USER_TOKENS["buyer"]
+    if "buyer" in USER_TOKENS:
+        del USER_TOKENS["buyer"]
     results["buyer_login_invalid_password"] = test_invalid_login("buyer")
 
     # Test invalid login (non-existent username)
@@ -117,7 +127,7 @@ if __name__ == "__main__":
 
     # Example of how to use the client for other tests later:
     # if results.get("admin_login_success"):
-    #     admin_client = ApiClient(user_role="admin") # Will use cached token
+    #     admin_client = ApiClient(user_role="admin")  # Will use cached token
     #     # response = admin_client.get("/some_admin_endpoint/")
     #     # logging.info(f"Admin accessing endpoint: {response.status_code}")
 
