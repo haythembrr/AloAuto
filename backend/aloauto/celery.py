@@ -2,8 +2,8 @@ import os
 from celery import Celery
 
 # Set the default Django settings module for the 'celery' program.
-# Replace 'backend.aloauto.settings' with your actual project settings module
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.aloauto.settings')
+# Use the same settings module as manage.py
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'aloauto.settings')
 
 app = Celery('aloauto') # Replace 'aloauto' with your project's name if different
 
