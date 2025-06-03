@@ -15,7 +15,8 @@ class Command(BaseCommand):
         categories_to_create = []
         for _ in range(random.randint(20, 50)): # 20-50 categories
             name = fake.unique.bs() # Using bs for category names
-            slug = slugify(name)
+            name_for_slug = name[:40] # Truncate for slug generation
+            slug = slugify(name_for_slug)
             original_slug = slug
             counter = 1
             while Category.objects.filter(slug=slug).exists():
@@ -47,7 +48,8 @@ class Command(BaseCommand):
         self.stdout.write("Creating products...")
         all_vendors = list(Vendor.objects.filter(status='active'))
         if not all_vendors:
-            self.stdout.write(self.style.WARNING('No approved vendors found. Products will not be assigned to any vendor.'))
+            self.stdout.write(self.style.ERROR('No active vendors found. Cannot create products.'))
+            return # Exit if no active vendors
 
         if not all_categories:
             self.stdout.write(self.style.ERROR('No categories found. Cannot create products.'))
@@ -60,7 +62,8 @@ class Command(BaseCommand):
                 self.stdout.write(f"Preparing product {i} of {num_products}...")
 
             name = fake.ecommerce_name() # Placeholder for product name
-            slug = slugify(name)
+            name_for_slug = name[:30] # Truncate for slug generation
+            slug = slugify(name_for_slug)
             original_slug = slug
             counter = 1
             while Product.objects.filter(slug=slug).exists(): # This check can be slow in a loop
@@ -119,7 +122,7 @@ class Command(BaseCommand):
                 product_images_to_create.append(ProductImage(
                     product=product,
                     image=image_path, # Assuming ImageField can take a path string
-                    alt_text=f"Image {i+1} for {product.name}",
+                    alt_text=f"Image {i+1} for {product.name[:220]}", # Truncate product name for alt_text
                     is_primary=(i == 0) # First image is primary
                 ))
 

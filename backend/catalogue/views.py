@@ -29,4 +29,4 @@ class ProductViewSet(viewsets.ModelViewSet):
         return Product.objects.filter(is_active=True)
 
     def perform_create(self, serializer):
-        serializer.save(vendor=self.request.user.vendor)
+        serializer.save(vendor=self.request.user.vendor_profile)

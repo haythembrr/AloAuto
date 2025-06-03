@@ -30,7 +30,7 @@ class Command(BaseCommand):
                     password=make_password(STANDARD_PASSWORD),
                     first_name=fake.first_name(),
                     last_name=fake.last_name(),
-                    phone=fake.phone_number(), # Changed from phone_number
+                    phone=fake.phone_number()[:20], # Changed from phone_number
                     is_staff=spec["is_staff"],
                     is_superuser=spec["is_superuser"],
                     role=spec["user_type"] # Changed from user_type
@@ -54,7 +54,7 @@ class Command(BaseCommand):
                 password=make_password(STANDARD_PASSWORD),
                 first_name=fake.first_name(),
                 last_name=fake.last_name(),
-                phone=fake.phone_number(), # Changed from phone_number
+                phone=fake.phone_number()[:20], # Changed from phone_number
                 is_staff=True,
                 is_superuser=True,
                 role='admin' # Changed from user_type
@@ -76,7 +76,7 @@ class Command(BaseCommand):
                 password=make_password(STANDARD_PASSWORD),
                 first_name=fake.first_name(),
                 last_name=fake.last_name(),
-                phone=fake.phone_number(), # Changed from phone_number
+                phone=fake.phone_number()[:20], # Changed from phone_number
                 is_staff=False,
                 is_superuser=False,
                 role='vendor' # Changed from user_type
@@ -125,7 +125,7 @@ class Command(BaseCommand):
                 password=make_password(STANDARD_PASSWORD),
                 first_name=fake.first_name(),
                 last_name=fake.last_name(),
-                phone=fake.phone_number(), # Changed from phone_number, Generic phone number
+                phone=fake.phone_number()[:20], # Changed from phone_number, Generic phone number
                 is_staff=False,
                 is_superuser=False,
                 role='buyer' # Changed from user_type

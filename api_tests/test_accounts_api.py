@@ -90,7 +90,14 @@ def scenario_admin_manage_users(admin_client):
         logging.info(f"Admin: Retrieving user ID {user_id}...")
         response = admin_client.get(f"/accounts/users/{user_id}/")
         if response.status_code == 200:
-            logging.info(f"Admin: Successfully retrieved user {user_id}: {response.json().get('username')}")
+            user_data = response.json()
+            logging.info(f"Admin: Successfully retrieved user {user_id}: {user_data.get('username')}")
+            # Task 2: Assertions for new fields and absence of password
+            assert 'is_active' in user_data, "is_active field missing"
+            assert 'created_at' in user_data, "created_at field missing"
+            assert 'updated_at' in user_data, "updated_at field missing"
+            assert 'password' not in user_data, "password field should not be present"
+            logging.info("Admin: Verified presence of is_active, created_at, updated_at and absence of password in user details.")
         else:
             logging.error(f"Admin: Failed to retrieve user {user_id}. Status: {response.status_code}")
             success = False
@@ -132,7 +139,14 @@ def scenario_buyer_manage_own_account(buyer_client):
     logging.info("Buyer: Retrieving own user details...")
     response = buyer_client.get("/accounts/users/me/") # Or f"/accounts/users/{buyer_user_id}/"
     if response.status_code == 200 and response.json().get("id") == buyer_user_id:
+        user_data = response.json()
         logging.info("Buyer: Successfully retrieved own user details.")
+        # Task 2: Assertions for new fields and absence of password
+        assert 'is_active' in user_data, "is_active field missing"
+        assert 'created_at' in user_data, "created_at field missing"
+        assert 'updated_at' in user_data, "updated_at field missing"
+        assert 'password' not in user_data, "password field should not be present"
+        logging.info("Buyer: Verified presence of is_active, created_at, updated_at and absence of password in own user details.")
     else:
         logging.error(f"Buyer: Failed to retrieve own user details. Status: {response.status_code}, Response: {response.text}")
         success = False
@@ -187,7 +201,7 @@ def scenario_buyer_manage_addresses(buyer_client):
     # 1. Create an address
     address_payload = {
         "user": test_data_ids["buyer_user_id"], # Some APIs might infer user from token
-        "street_address": "123 Test St",
+        "street": "123 Test St", # Task 1: Corrected street_address to street
         "city": "Testville",
         "state": "TS",
         "postal_code": "12345",
@@ -265,12 +279,287 @@ def scenario_buyer_manage_addresses(buyer_client):
     return success
 
 
-if __name__ == "__main__":
+# --- New Test Scenario: User Password Management (Task 3) ---
+def scenario_user_password_change(admin_client, base_url):
+    logging.info("--- Scenario: User Password Management ---")
+    success = True
+    test_user_username = "pw_change_user"
+    initial_password = "initialPassword123"
+    new_password_by_user = "newPasswordByUser456"
+    new_password_by_admin = "newPasswordByAdmin789"
+    user_id = None
+
+    # 1. Admin creates a new user
+    user_payload = {
+        "username": test_user_username,
+        "email": f"{test_user_username}@example.com",
+        "password": initial_password,
+        "role": "buyer", # Or any role that can log in
+        "first_name": "PWTest",
+        "last_name": "User"
+    }
+    logging.info(f"Admin: Creating user '{test_user_username}' for password change tests...")
+    response_create = admin_client.post("/accounts/users/", data=user_payload)
+    if response_create.status_code == 201:
+        user_id = response_create.json().get("id")
+        logging.info(f"Admin: Successfully created user '{test_user_username}' with ID {user_id}.")
+    else:
+        logging.error(f"Admin: Failed to create user for password tests. Status: {response_create.status_code}, Response: {response_create.text}")
+        # Attempt to find user if already exists (e.g. from previous failed run)
+        user_id = get_user_id_by_username(admin_client, test_user_username)
+        if user_id:
+            logging.warning(f"Admin: User '{test_user_username}' already existed. Proceeding with ID {user_id}.")
+            # As admin, set their password to the known initial_password
+            admin_client.patch(f"/accounts/users/{user_id}/", data={"password": initial_password})
+        else:
+            return False # Cannot proceed
+
+    # 2. Verify user can log in with initial password
+    logging.info(f"User '{test_user_username}': Attempting login with initial password...")
+    user_client = ApiClient(user_role=None, custom_username=test_user_username, custom_password=initial_password, base_url=base_url)
+    if user_client.token:
+        logging.info(f"User '{test_user_username}': Successfully logged in with initial password.")
+    else:
+        logging.error(f"User '{test_user_username}': Failed to log in with initial password.")
+        success = False
+        # No cleanup here, admin might need to delete user if created.
+
+    # 3. User updates their own password (via /me/ or /users/{id}/)
+    if user_client.token: # Only if logged in
+        logging.info(f"User '{test_user_username}': Updating own password to '{new_password_by_user}'...")
+        # API might require current password for self-update, but this is not standard for DRF ModelViewSet
+        # Let's assume PATCH to /accounts/users/me/ or /accounts/users/{id}/
+        update_payload = {"password": new_password_by_user}
+        # Try /me/ first
+        response_self_update = user_client.patch("/accounts/users/me/", data=update_payload)
+        if response_self_update.status_code != 200: # If /me/ is not for PATCH or failed
+             logging.warning(f"User '{test_user_username}': Update via /me/ failed (Status: {response_self_update.status_code}). Trying /users/{user_id}/")
+             response_self_update = user_client.patch(f"/accounts/users/{user_id}/", data=update_payload)
+
+        if response_self_update.status_code == 200:
+            logging.info(f"User '{test_user_username}': Successfully updated own password.")
+        else:
+            logging.error(f"User '{test_user_username}': Failed to update own password. Status: {response_self_update.status_code}, Response: {response_self_update.text}")
+            success = False
+    else:
+        logging.warning(f"User '{test_user_username}': Skipping self password update as not logged in.")
+
+
+    # 4. Verify user can log in with new password (set by user)
+    if success: # Only if previous steps including self-update were okay
+        logging.info(f"User '{test_user_username}': Attempting login with new password (set by user)...")
+        user_client_new_pw = ApiClient(user_role=None, custom_username=test_user_username, custom_password=new_password_by_user, base_url=base_url)
+        if user_client_new_pw.token:
+            logging.info(f"User '{test_user_username}': Successfully logged in with new password (set by user).")
+        else:
+            logging.error(f"User '{test_user_username}': Failed to log in with new password (set by user).")
+            success = False
+
+    # 5. Verify user can NO LONGER log in with old (initial) password
+    if success: # Only if previous steps were okay
+        logging.info(f"User '{test_user_username}': Attempting login with OLD (initial) password (should fail)...")
+        user_client_old_pw = ApiClient(user_role=None, custom_username=test_user_username, custom_password=initial_password, base_url=base_url)
+        if not user_client_old_pw.token:
+            logging.info(f"User '{test_user_username}': Correctly FAILED to log in with old (initial) password.")
+        else:
+            logging.error(f"User '{test_user_username}': INCORRECTLY logged in with old (initial) password.")
+            success = False
+            user_client_old_pw.logout() # Logout if accidentally logged in
+
+    # 6. (Optional) Admin changes user's password
+    logging.info(f"Admin: Changing password for user '{test_user_username}' to '{new_password_by_admin}'...")
+    response_admin_update = admin_client.patch(f"/accounts/users/{user_id}/", data={"password": new_password_by_admin})
+    if response_admin_update.status_code == 200:
+        logging.info(f"Admin: Successfully changed password for user '{test_user_username}'.")
+    else:
+        logging.error(f"Admin: Failed to change password for user '{test_user_username}'. Status: {response_admin_update.status_code}, Response: {response_admin_update.text}")
+        success = False
+
+    # 7. Verify user can log in with admin-set password
+    if success: # Only if admin update was okay
+        logging.info(f"User '{test_user_username}': Attempting login with admin-set password...")
+        user_client_admin_pw = ApiClient(user_role=None, custom_username=test_user_username, custom_password=new_password_by_admin, base_url=base_url)
+        if user_client_admin_pw.token:
+            logging.info(f"User '{test_user_username}': Successfully logged in with admin-set password.")
+        else:
+            logging.error(f"User '{test_user_username}': Failed to log in with admin-set password.")
+            success = False
+
+    # Cleanup: Admin deletes the test user
+    if user_id:
+        logging.info(f"Admin: Deleting user '{test_user_username}' (ID: {user_id})...")
+        response_delete = admin_client.delete(f"/accounts/users/{user_id}/")
+        if response_delete.status_code == 204:
+            logging.info(f"Admin: Successfully deleted user '{test_user_username}'.")
+        else:
+            logging.error(f"Admin: Failed to delete user '{test_user_username}'. Status: {response_delete.status_code}, Response: {response_delete.text}")
+            # success = False # Don't fail the whole scenario for cleanup failure, but log it.
+    return success
+
+# --- New Test Scenario: Unique Default Addresses (Task 4) ---
+def scenario_buyer_unique_default_addresses(buyer_client):
+    logging.info("--- Scenario: Buyer Manages Unique Default Addresses ---")
+    success = True
+    user_id = test_data_ids.get("buyer_user_id")
+    if not user_id:
+        logging.error("Buyer: User ID not found, cannot test unique default addresses.")
+        # Try to get it if not set by previous scenarios
+        user_id = get_user_id_by_username(buyer_client, CREDENTIALS["buyer"]["username"])
+        if not user_id: return False
+        test_data_ids["buyer_user_id"] = user_id
+
+
+    address_ids_cleanup = []
+
+    def create_address(payload_override):
+        base_payload = {
+            "street": "Default St", "city": "DefaultVille", "state": "DS",
+            "postal_code": "00000", "country": "DefaultLand",
+            "is_default_shipping": False, "is_default_billing": False
+        }
+        payload = {**base_payload, **payload_override}
+        # user field might be inferred by API from token, or might be required.
+        # Current AddressViewSet.perform_create sets user=self.request.user
+        # So, user field is not needed in payload.
+        # payload["user"] = user_id
+
+        response = buyer_client.post("/accounts/addresses/", data=payload)
+        if response.status_code == 201:
+            addr_id = response.json().get("id")
+            address_ids_cleanup.append(addr_id)
+            logging.info(f"Created address {addr_id} with shipping={payload['is_default_shipping']}, billing={payload['is_default_billing']}.")
+            return addr_id
+        else:
+            logging.error(f"Failed to create address. Payload: {payload}, Status: {response.status_code}, Response: {response.text}")
+            return None
+
+    def get_address_details(addr_id):
+        response = buyer_client.get(f"/accounts/addresses/{addr_id}/")
+        if response.status_code == 200:
+            return response.json()
+        logging.error(f"Failed to get address {addr_id} details. Status: {response.status_code}")
+        return None
+
+    def update_address(addr_id, payload_override):
+        response = buyer_client.patch(f"/accounts/addresses/{addr_id}/", data=payload_override)
+        if response.status_code == 200:
+            logging.info(f"Updated address {addr_id} with {payload_override}.")
+            return response.json()
+        else:
+            logging.error(f"Failed to update address {addr_id}. Status: {response.status_code}, Response: {response.text}")
+            return None
+
+    # --- Test is_default_shipping ---
+    logging.info("Testing unique default shipping address...")
+    # A. Create Address 1, mark is_default_shipping=True
+    addr1_id = create_address({"street": "1 Ship St", "is_default_shipping": True})
+    if not addr1_id: success = False; return success # Early exit if creation fails
+
+    addr1_details = get_address_details(addr1_id)
+    if not (addr1_details and addr1_details.get("is_default_shipping") == True):
+        logging.error("Address 1 was not set as default shipping upon creation.")
+        success = False
+
+    # B. Create Address 2, mark is_default_shipping=True
+    if success:
+        addr2_id = create_address({"street": "2 Ship St", "is_default_shipping": True})
+        if not addr2_id: success = False; return success
+
+        addr1_details = get_address_details(addr1_id) # Re-fetch addr1
+        addr2_details = get_address_details(addr2_id)
+
+        if not (addr2_details and addr2_details.get("is_default_shipping") == True):
+            logging.error("Address 2 was not set as default shipping.")
+            success = False
+        if not (addr1_details and addr1_details.get("is_default_shipping") == False):
+            logging.error("Address 1 did not become non-default shipping after Address 2 was made default.")
+            success = False
+
+    # C. Update Address 1, set is_default_shipping=True
+    if success:
+        update_response = update_address(addr1_id, {"is_default_shipping": True})
+        if not update_response: success = False; return success
+
+        addr1_details = get_address_details(addr1_id)
+        addr2_details = get_address_details(addr2_id) # Re-fetch addr2
+
+        if not (addr1_details and addr1_details.get("is_default_shipping") == True):
+            logging.error("Address 1 was not set as default shipping upon update.")
+            success = False
+        if not (addr2_details and addr2_details.get("is_default_shipping") == False):
+            logging.error("Address 2 did not become non-default shipping after Address 1 was updated to default.")
+            success = False
+
+    # --- Test is_default_billing ---
+    # Reset: ensure all existing test addresses for this scenario are not default billing
+    for addr_id_clean in address_ids_cleanup:
+        update_address(addr_id_clean, {"is_default_billing": False})
+
+    logging.info("Testing unique default billing address...")
+    # A. Create Address 3 (use addr1_id for simplicity if available, or create new), mark is_default_billing=True
+    # Let's use existing ones to reduce creations, then clean them up.
+    # First, ensure addr1 and addr2 are not default billing from previous tests.
+    if addr1_id: update_address(addr1_id, {"is_default_billing": False, "street": "1 Bill St"})
+    if 'addr2_id' in locals() and addr2_id: update_address(addr2_id, {"is_default_billing": False, "street": "2 Bill St"})
+
+    addr3_id = create_address({"street": "3 Bill St", "is_default_billing": True})
+    if not addr3_id: success = False; return success
+
+    addr3_details = get_address_details(addr3_id)
+    if not (addr3_details and addr3_details.get("is_default_billing") == True):
+        logging.error("Address 3 was not set as default billing upon creation.")
+        success = False
+
+    # B. Create Address 4, mark is_default_billing=True
+    if success:
+        addr4_id = create_address({"street": "4 Bill St", "is_default_billing": True})
+        if not addr4_id: success = False; return success
+
+        addr3_details = get_address_details(addr3_id) # Re-fetch addr3
+        addr4_details = get_address_details(addr4_id)
+
+        if not (addr4_details and addr4_details.get("is_default_billing") == True):
+            logging.error("Address 4 was not set as default billing.")
+            success = False
+        if not (addr3_details and addr3_details.get("is_default_billing") == False):
+            logging.error("Address 3 did not become non-default billing after Address 4 was made default.")
+            success = False
+
+    # C. Update Address 3, set is_default_billing=True
+    if success:
+        update_response = update_address(addr3_id, {"is_default_billing": True})
+        if not update_response: success = False; return success
+
+        addr3_details = get_address_details(addr3_id)
+        addr4_details = get_address_details(addr4_id) # Re-fetch addr4
+
+        if not (addr3_details and addr3_details.get("is_default_billing") == True):
+            logging.error("Address 3 was not set as default billing upon update.")
+            success = False
+        if not (addr4_details and addr4_details.get("is_default_billing") == False):
+            logging.error("Address 4 did not become non-default billing after Address 3 was updated to default.")
+            success = False
+
+    # E. Clean up created addresses
+    logging.info(f"Cleaning up {len(address_ids_cleanup)} addresses created for unique default test...")
+    for addr_id in address_ids_cleanup:
+        del_response = buyer_client.delete(f"/accounts/addresses/{addr_id}/")
+        if del_response.status_code == 204:
+            logging.info(f"Successfully deleted address {addr_id}.")
+        else:
+            logging.warning(f"Failed to delete address {addr_id}. Status: {del_response.status_code}")
+            # Not failing the test for cleanup failure, but it's good to note.
+
+    return success
+
+
+def main(): # Renamed from if __name__ == "__main__": block to be callable
     logging.info("======== Starting Accounts API Tests ========")
 
     # Initialize clients
-    admin_client = ApiClient(user_role="admin")
+    admin_client = ApiClient(user_role="admin") # Assuming base_url is set in ApiClient's constructor or globally
     buyer_client = ApiClient(user_role="buyer")
+    base_url = admin_client.base_url # Get base_url from an initialized client
 
     results = {}
 
@@ -278,12 +567,17 @@ if __name__ == "__main__":
         logging.error("Admin client failed to authenticate. Skipping admin tests.")
     else:
         results["admin_manage_users"] = scenario_admin_manage_users(admin_client)
+        # User password change scenario needs admin client and base_url for new client instantiation
+        results["user_password_change"] = scenario_user_password_change(admin_client, base_url)
+
 
     if not buyer_client.token:
         logging.error("Buyer client failed to authenticate. Skipping buyer tests.")
     else:
         results["buyer_manage_own_account"] = scenario_buyer_manage_own_account(buyer_client)
         results["buyer_manage_addresses"] = scenario_buyer_manage_addresses(buyer_client)
+        results["buyer_unique_default_addresses"] = scenario_buyer_unique_default_addresses(buyer_client)
+
 
     logging.info("\n======== Accounts API Test Summary ========")
     all_passed = True
