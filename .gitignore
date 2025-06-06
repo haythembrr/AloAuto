@@ -7,3 +7,4 @@ migrations
 *.log
 *.db
 *.env
+db.sqlite3

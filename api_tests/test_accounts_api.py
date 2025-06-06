@@ -316,7 +316,7 @@ def scenario_user_password_change(admin_client, base_url):
 
     # 2. Verify user can log in with initial password
     logging.info(f"User '{test_user_username}': Attempting login with initial password...")
-    user_client = ApiClient(user_role=None, custom_username=test_user_username, custom_password=initial_password, base_url=base_url)
+    user_client = ApiClient(user_role=None,username=test_user_username, password=initial_password, base_url=base_url)
     if user_client.token:
         logging.info(f"User '{test_user_username}': Successfully logged in with initial password.")
     else:
@@ -348,7 +348,7 @@ def scenario_user_password_change(admin_client, base_url):
     # 4. Verify user can log in with new password (set by user)
     if success: # Only if previous steps including self-update were okay
         logging.info(f"User '{test_user_username}': Attempting login with new password (set by user)...")
-        user_client_new_pw = ApiClient(user_role=None, custom_username=test_user_username, custom_password=new_password_by_user, base_url=base_url)
+        user_client_new_pw = ApiClient(user_role=None, username=test_user_username, password=new_password_by_user, base_url=base_url)
         if user_client_new_pw.token:
             logging.info(f"User '{test_user_username}': Successfully logged in with new password (set by user).")
         else:
@@ -358,7 +358,7 @@ def scenario_user_password_change(admin_client, base_url):
     # 5. Verify user can NO LONGER log in with old (initial) password
     if success: # Only if previous steps were okay
         logging.info(f"User '{test_user_username}': Attempting login with OLD (initial) password (should fail)...")
-        user_client_old_pw = ApiClient(user_role=None, custom_username=test_user_username, custom_password=initial_password, base_url=base_url)
+        user_client_old_pw = ApiClient(user_role=None, username=test_user_username, password=initial_password, base_url=base_url)
         if not user_client_old_pw.token:
             logging.info(f"User '{test_user_username}': Correctly FAILED to log in with old (initial) password.")
         else:
@@ -378,7 +378,7 @@ def scenario_user_password_change(admin_client, base_url):
     # 7. Verify user can log in with admin-set password
     if success: # Only if admin update was okay
         logging.info(f"User '{test_user_username}': Attempting login with admin-set password...")
-        user_client_admin_pw = ApiClient(user_role=None, custom_username=test_user_username, custom_password=new_password_by_admin, base_url=base_url)
+        user_client_admin_pw = ApiClient(user_role=None,username=test_user_username, password=new_password_by_admin, base_url=base_url)
         if user_client_admin_pw.token:
             logging.info(f"User '{test_user_username}': Successfully logged in with admin-set password.")
         else:
