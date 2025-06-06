@@ -65,19 +65,75 @@ def login(user_role="admin"):
         raise
 
 
-class ApiClient:
-    def __init__(self, user_role="guest"):
-        self.base_url = BASE_URL
-        self.token = None
-        self.user_role = user_role
+def login_with_credentials(username, password, base_url=BASE_URL):
+    """Login using explicit credentials and return a JWT token."""
+    try:
+        endpoint = f"{base_url}/token/"
+        logging.info(f"Attempting login for {username} at {endpoint}")
+        response = requests.post(endpoint, data={"username": username, "password": password})
+        response.raise_for_status()
+        token = response.json().get("access")
+        if not token:
+            logging.error("Login failed: 'access' token not found in response.")
+            raise ValueError("Access token not found in login response.")
+        return token
+    except requests.exceptions.HTTPError as e:
+        logging.error(
+            f"HTTP error during login for {username}: {e.response.status_code} - {e.response.text}"
+        )
+        raise
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Request error during login for {username}: {e}")
+        raise
+    except Exception as e:
+        logging.error(f"An unexpected error occurred during login for {username}: {e}")
+        raise
 
-        if user_role != "guest":
+
+class ApiClient:
+    def __init__(self, user_role="guest", username=None, password=None, base_url=None):
+        """Simple wrapper around requests for authenticated API calls.
+
+        Parameters
+        ----------
+        user_role: str or None
+            Convenience role name to look up credentials from ``CREDENTIALS``.
+            If ``username``/``password`` are provided, this can be ``None`` or
+            any descriptive label.
+        username: str, optional
+            Explicit username to use for authentication. When provided together
+            with ``password`` it bypasses the predefined credentials.
+        password: str, optional
+            Password to use when ``username`` is given.
+        base_url: str, optional
+            Override the default ``BASE_URL`` for the API.
+        """
+
+        self.base_url = base_url or BASE_URL
+        self.token = None
+        self.user_role = user_role if user_role is not None else "guest"
+        self.username = username
+
+        # Authenticate either with explicit credentials or using a role from the
+        # predefined credential set.
+        if username and password:
             try:
-                self.token = login(user_role)
-            except Exception as e:
+                self.token = login_with_credentials(username, password, self.base_url)
+            except Exception:
+                # login_with_credentials already logs the specific error
+                logging.warning(
+                    f"Could not log in user {username}. Client will be unauthenticated."
+                )
+                self.user_role = "guest"
+        elif self.user_role != "guest":
+            try:
+                self.token = login(self.user_role)
+            except Exception:
                 # Error already logged in login function
-                logging.warning(f"Could not automatically log in user {user_role}. Client will be unauthenticated.")
-                self.user_role = "guest" # Fallback to guest
+                logging.warning(
+                    f"Could not automatically log in user {self.user_role}. Client will be unauthenticated."
+                )
+                self.user_role = "guest"  # Fallback to guest
 
     def _get_headers(self):
         headers = {"Content-Type": "application/json"}
@@ -129,6 +185,12 @@ class ApiClient:
 
     def delete(self, endpoint):
         return self.request("DELETE", endpoint)
+
+    def logout(self):
+        """Simple logout by clearing the stored token."""
+        if self.user_role in USER_TOKENS:
+            USER_TOKENS.pop(self.user_role, None)
+        self.token = None
 
 if __name__ == "__main__":
     # Example usage / basic test of the client
