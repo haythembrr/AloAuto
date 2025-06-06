@@ -26,22 +26,36 @@ def get_user_id_by_username(client, username):
     # The "me" endpoint or profile endpoint is common for this.
     # Let's assume /api/accounts/users/me/ exists for authenticated users.
     if username == CREDENTIALS[client.user_role]["username"]: # If fetching self
-        response = client.get("/accounts/users/me/")
+        logging.info(f"Fetching self ({username}) user ID using /accounts/users/ endpoint.")
+        response = client.get("/accounts/users/") # Changed from /me/
         if response.status_code == 200:
-            return response.json().get("id")
+            users_list = response.json().get("results", [])
+            if not users_list:
+                logging.error(f"No users found in response for {username} when fetching self via /accounts/users/.")
+                return None
+
+            # For non-admins, UserViewSet filters to only show current user.
+            # For admins, it lists all users. We need to find the correct one.
+            if client.user_role != "admin":
+                if users_list[0].get("username") == username: # Should be the only one
+                    logging.info(f"Successfully fetched self ID for non-admin {username}.")
+                    return users_list[0].get("id")
+                else:
+                    logging.error(f"Non-admin {username} fetched a user, but username does not match: {users_list[0].get('username')}")
+                    return None
+            else: # Admin fetching self
+                for user_obj in users_list:
+                    if user_obj.get("username") == username:
+                        logging.info(f"Successfully fetched self ID for admin {username} from user list.")
+                        return user_obj.get("id")
+                logging.error(f"Admin {username} could not find self in the list from /accounts/users/.")
+                return None
         else:
-            logging.error(f"Could not fetch current user's ({username}) ID via /me/ endpoint. Status: {response.status_code}")
-            # Try to list all users and find by username if admin
-            if client.user_role == "admin":
-                response_users = client.get("/accounts/users/")
-                if response_users.status_code == 200:
-                    for user in response_users.json().get("results", []): # Assuming pagination
-                        if user.get("username") == username:
-                            return user.get("id")
-                logging.error(f"Could not find user {username} by listing users as admin.")
+            logging.error(f"Could not fetch users list for ({username}) ID via /accounts/users/ endpoint. Status: {response.status_code}")
             return None
     else: # Admin fetching another user
         if client.user_role == "admin":
+            logging.info(f"Admin fetching other user '{username}' ID.")
             response_users = client.get(f"/accounts/users/?username={username}") # Assumes username filter works
             users_list = response_users.json().get("results", [])
             if response_users.status_code == 200 and users_list:
@@ -135,9 +149,9 @@ def scenario_buyer_manage_own_account(buyer_client):
     test_data_ids["buyer_user_id"] = buyer_user_id
     logging.info(f"Buyer: Own user ID is {buyer_user_id}.")
 
-    # 1. Retrieve own user details (using /me/ or /users/{id}/)
+    # 1. Retrieve own user details (using /users/{id}/)
     logging.info("Buyer: Retrieving own user details...")
-    response = buyer_client.get("/accounts/users/me/") # Or f"/accounts/users/{buyer_user_id}/"
+    response = buyer_client.get(f"/accounts/users/{buyer_user_id}/") # Changed from /me/
     if response.status_code == 200 and response.json().get("id") == buyer_user_id:
         user_data = response.json()
         logging.info("Buyer: Successfully retrieved own user details.")
@@ -154,27 +168,15 @@ def scenario_buyer_manage_own_account(buyer_client):
     # 2. Update own user details
     updated_last_name = "UpdatedLastNameByBuyer"
     payload = {"last_name": updated_last_name}
-    logging.info("Buyer: Updating own last name...")
-    # Buyers might only be able to update their own details via /me/ or /profile/ endpoint, not /users/{id}/
-    response = buyer_client.patch("/accounts/users/me/update/", data=payload) # Assuming an endpoint like this, or /users/me/
-    # If the API uses PUT on /users/me/ and requires all fields, this test would need adjustment.
-    # A common pattern is PATCH to /users/me/ or a dedicated profile endpoint.
-    # Let's assume PATCH to /api/accounts/users/{user_id}/ is allowed for self
-    # response_update_self = buyer_client.patch(f"/accounts/users/{buyer_user_id}/", data=payload)
-
+    logging.info("Buyer: Updating own last name using /accounts/users/{buyer_user_id}/...")
+    # Buyers should be able to update their own details via PATCH to /api/accounts/users/{user_id}/
+    response = buyer_client.patch(f"/accounts/users/{buyer_user_id}/", data=payload)
 
     if response.status_code == 200 and response.json().get("last_name") == updated_last_name:
         logging.info("Buyer: Successfully updated own last name.")
     else:
-        # Fallback: try updating via /users/{id}/ if /me/update didn't work or doesn't exist
-        logging.warning(f"Buyer: Update via /accounts/users/me/update/ failed (Status: {response.status_code}). Trying /accounts/users/{buyer_user_id}/")
-        response_alt = buyer_client.patch(f"/accounts/users/{buyer_user_id}/", data=payload)
-        if response_alt.status_code == 200 and response_alt.json().get("last_name") == updated_last_name:
-            logging.info("Buyer: Successfully updated own last name via /users/{id}/.")
-        else:
-            logging.error(f"Buyer: Failed to update own user details. Main attempt Status: {response.status_code}, Text: {response.text}. Alt attempt Status: {response_alt.status_code}, Text: {response_alt.text}")
-            success = False
-
+        logging.error(f"Buyer: Failed to update own user details using /accounts/users/{buyer_user_id}/. Status: {response.status_code}, Text: {response.text}")
+        success = False
 
     # 3. Attempt to list users (should be denied)
     logging.info("Buyer: Attempting to list all users (should be denied)...")
@@ -200,7 +202,7 @@ def scenario_buyer_manage_addresses(buyer_client):
 
     # 1. Create an address
     address_payload = {
-        "user": test_data_ids["buyer_user_id"], # Some APIs might infer user from token
+        # "user": test_data_ids["buyer_user_id"], # User is inferred from token
         "street": "123 Test St", # Task 1: Corrected street_address to street
         "city": "Testville",
         "state": "TS",
@@ -248,7 +250,8 @@ def scenario_buyer_manage_addresses(buyer_client):
 
     # 4. Update the address
     updated_city = "NewTestCity"
-    update_payload = {"city": updated_city, "user": test_data_ids["buyer_user_id"]} # some fields might be required on PUT/PATCH
+    # "user" field is not needed as it's inferred, and usually not updatable.
+    update_payload = {"city": updated_city}
     logging.info(f"Buyer: Updating address ID {address_id}...")
     response = buyer_client.patch(f"/accounts/addresses/{address_id}/", data=update_payload) # Using PATCH
     if response.status_code == 200 and response.json().get("city") == updated_city:
@@ -328,18 +331,15 @@ def scenario_user_password_change(admin_client, base_url):
     if user_client.token: # Only if logged in
         logging.info(f"User '{test_user_username}': Updating own password to '{new_password_by_user}'...")
         # API might require current password for self-update, but this is not standard for DRF ModelViewSet
-        # Let's assume PATCH to /accounts/users/me/ or /accounts/users/{id}/
+        # User updates own password directly using /users/{id}/ endpoint
         update_payload = {"password": new_password_by_user}
-        # Try /me/ first
-        response_self_update = user_client.patch("/accounts/users/me/", data=update_payload)
-        if response_self_update.status_code != 200: # If /me/ is not for PATCH or failed
-             logging.warning(f"User '{test_user_username}': Update via /me/ failed (Status: {response_self_update.status_code}). Trying /users/{user_id}/")
-             response_self_update = user_client.patch(f"/accounts/users/{user_id}/", data=update_payload)
+        logging.info(f"User '{test_user_username}': Attempting password update via /accounts/users/{user_id}/.")
+        response_self_update = user_client.patch(f"/accounts/users/{user_id}/", data=update_payload)
 
         if response_self_update.status_code == 200:
-            logging.info(f"User '{test_user_username}': Successfully updated own password.")
+            logging.info(f"User '{test_user_username}': Successfully updated own password via /users/{user_id}/.")
         else:
-            logging.error(f"User '{test_user_username}': Failed to update own password. Status: {response_self_update.status_code}, Response: {response_self_update.text}")
+            logging.error(f"User '{test_user_username}': Failed to update own password via /users/{user_id}/. Status: {response_self_update.status_code}, Response: {response_self_update.text}")
             success = False
     else:
         logging.warning(f"User '{test_user_username}': Skipping self password update as not logged in.")
