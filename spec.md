@@ -15,7 +15,7 @@ Le système utilise un paradigme où chaque fonction métier est implémentée p
 
 ## Architecture
 
-### Vue d'Ensemble du Système - Architecture Complète
+### Vue d'Ensemble du Système - Architecture Agentic Complète
 
 ```mermaid
 graph TB
@@ -25,76 +25,206 @@ graph TB
         Outlook[Outlook Web App]
     end
     
-    subgraph "Ingestion & Security Layer"
+    subgraph "Ingestion & Preprocessing Layer"
         GraphAPI[Microsoft Graph API Client]
         Webhook[Graph Change Notifications]
         AuthService[OAuth2 Authentication Service]
         RateLimiter[API Rate Limiter]
         
-        subgraph "Security Validation Pipeline"
+        subgraph "Preprocessing & Validation Cluster"
+            DeduplicationAgent[Deduplication Agent]
+            HashDeduplicator[Hash MD5/SHA256 Tool]
+            SimilarityDetector[Semantic Similarity Tool]
+            
+            AntiSpamAgent[Anti-Spam Filtering Agent]
+            BayesianFilter[Bayesian Filter Tool]
+            BlacklistChecker[Blacklist Checker Tool]
+            BehaviorAnalyzer[Behavior Analysis Tool]
+            
             SecurityAgent[Security Validation Agent]
-            DKIMValidator[DKIM Validator Tool]
-            SPFChecker[SPF Checker Tool]
-            AntiSpam[Anti-Spam Engine Tool]
-            PhishingDetector[Phishing Detector Tool]
-            ReputationChecker[Reputation Checker Tool]
+            DKIMValidator[DKIM/SPF/DMARC Validator Tool]
+            CertificateChecker[Certificate Verification Tool]
+            
+            ContentCleanerAgent[Content Cleaning Agent]
+            HTMLCleaner[HTML Cleaner Tool]
+            TextNormalizer[Text Normalizer Tool]
+            StructurePreserver[Structure Preservation Tool]
+            
+            EncodingAgent[Encoding Normalization Agent]
+            EncodingDetector[Auto Encoding Detection Tool]
+            UTF8Converter[UTF-8 Converter Tool]
+            
+            MetadataAgent[Metadata Extraction Agent]
+            HeaderExtractor[Header Extractor Tool]
+            ThreadingAnalyzer[Threading Analyzer Tool]
+            SenderAnalyzer[Sender Analysis Tool]
         end
     end
     
     subgraph "AI Processing Pipeline - Near Real-Time"
-        subgraph "Content Analysis Cluster"
-            IngestionAgent[Email Ingestion Agent]
-            PreprocessorAgent[Content Preprocessor Agent]
-            LanguageDetector[Language Detection Tool]
-            ContentCleaner[HTML Cleaner Tool]
-            MetadataExtractor[Metadata Extractor Tool]
-        end
-        
-        subgraph "Semantic Intelligence Cluster"
-            SemanticAgent[Semantic Analysis Agent]
-            NLPEngine[NLP Processing Tool]
-            EntityRecognizer[Named Entity Recognition Tool]
+        subgraph "Classification & Intelligence Cluster"
+            MultiLevelClassificationAgent[Multi-Level Classification Agent]
             IntentClassifier[Intent Classification Tool]
-            SentimentAnalyzer[Sentiment Analysis Tool]
-            ContextAnalyzer[Context Understanding Tool]
-        end
-        
-        subgraph "Data Extraction Cluster"
-            ExtractionAgent[Data Extraction Agent]
-            OCRAgent[OCR Processing Agent]
-            DocumentParser[Document Parser Agent]
-            OCREngine[Tesseract/Azure OCR Tool]
-            PDFParser[PDF Parser Tool]
-            ImageProcessor[Image Processing Tool]
-            TemplateMatcher[Template Matching Tool]
-            FormProcessor[Form Processing Tool]
-            DataValidator[Data Validation Tool]
-        end
-        
-        subgraph "Classification & Routing Cluster"
-            ClassificationAgent[Email Classification Agent]
-            BusinessRulesAgent[Business Rules Agent]
-            PriorityAgent[Priority Scoring Agent]
-            MLClassifier[ML Classification Tool]
-            RulesEngine[Business Rules Engine Tool]
-            ConfidenceScorer[Confidence Scoring Tool]
+            BusinessCategorizer[Business Category Tool]
+            PriorityScorer[Priority Scoring Tool]
+            ComplexityAnalyzer[Complexity Analysis Tool]
+            RequestTypeDetector[Request Type Detection Tool]
             
-            RoutingAgent[Intelligent Routing Agent]
-            SkillsMatcher[Skills Matching Tool]
-            WorkloadBalancer[Workload Balancer Tool]
-            SLACalculator[SLA Calculator Tool]
-            EscalationEngine[Escalation Engine Tool]
-            AvailabilityChecker[Availability Checker Tool]
+            SemanticIntelligenceAgent[Semantic Intelligence Agent]
+            ContextualAnalyzer[Contextual Understanding Tool]
+            SentimentAnalyzer[Sentiment Analysis Tool]
+            EmotionDetector[Emotion Detection Tool]
+            HiddenIntentDetector[Hidden Intent Detection Tool]
+            UrgencyDetector[Implicit Urgency Detection Tool]
+            OpportunityDetector[Commercial Opportunity Tool]
+            EmotionalLoadAnalyzer[Emotional Load Analysis Tool]
         end
         
-        subgraph "Response Generation Cluster"
-            ResponseAgent[Response Generation Agent]
-            TemplateAgent[Template Selection Agent]
-            PersonalizationAgent[Personalization Agent]
-            LLMGenerator[LLM Response Generator Tool]
-            TemplateEngine[Template Engine Tool]
-            ToneAdapter[Tone Adaptation Tool]
-            ContentValidator[Content Validator Tool]
+        subgraph "Natural Language Processing Cluster"
+            AdvancedTokenizationAgent[Advanced Tokenization Agent]
+            OrthographicTolerance[Orthographic Tolerance Tool]
+            VariantHandler[Linguistic Variant Tool]
+            
+            PhoneticProcessingAgent[Phonetic Processing Agent]
+            RegionalSynonyms[Regional Synonym Tool]
+            BusinessAbbreviations[Business Abbreviation Tool]
+            
+            SemanticIndexingAgent[Semantic Indexing Agent]
+            VectorEmbedding[Vector Embedding Tool]
+            IntelligentSearch[Intelligent Search Tool]
+            
+            EntityRecognitionAgent[Advanced Entity Recognition Agent]
+            PersonRecognizer[Person Recognition Tool]
+            LocationRecognizer[Location Recognition Tool]
+            OrganizationRecognizer[Organization Recognition Tool]
+            DateTimeRecognizer[DateTime Recognition Tool]
+            MoneyRecognizer[Money Recognition Tool]
+            
+            ClientReferenceAgent[Client Reference Detection Agent]
+            ClientNumberDetector[Client Number Detection Tool]
+            ContractDetector[Contract Detection Tool]
+            OrderDetector[Order Detection Tool]
+            
+            NormalizationAgent[Advanced Normalization Agent]
+            SynonymNormalizer[Synonym Normalizer Tool]
+            AbbreviationNormalizer[Abbreviation Normalizer Tool]
+            RegionalExpression[Regional Expression Tool]
+        end
+        
+        subgraph "Ultra-Performant OCR & Data Extraction Cluster"
+            AttachmentProcessingAgent[Attachment Processing Agent]
+            MultiFormatProcessor[Multi-Format Processor Tool]
+            ContrastOptimizer[Contrast Optimizer Tool]
+            OrientationCorrector[Orientation Corrector Tool]
+            
+            IntelligentFilteringAgent[Intelligent Filtering Agent]
+            FalseAttachmentFilter[False Attachment Filter Tool]
+            LogoDetector[Logo Detector Tool]
+            SignatureDetector[Signature Detector Tool]
+            DecorativeImageFilter[Decorative Image Filter Tool]
+            
+            DocumentTypeRecognitionAgent[Document Type Recognition Agent]
+            FormRecognizer[Administrative Form Recognizer Tool]
+            InvoiceRecognizer[Invoice Recognizer Tool]
+            ExpertiseReportRecognizer[Expertise Report Recognizer Tool]
+            OfficialDeclarationRecognizer[Official Declaration Recognizer Tool]
+            JustificationRecognizer[Justification Document Recognizer Tool]
+            IdentityDocumentRecognizer[Identity Document Recognizer Tool]
+            FinancialReportRecognizer[Financial Report Recognizer Tool]
+            ContractRecognizer[Contract Recognizer Tool]
+            
+            StructuredExtractionAgent[Structured Data Extraction Agent]
+            RegexPatternExtractor[Regex Pattern Extractor Tool]
+            PredefinedTemplateExtractor[Predefined Template Extractor Tool]
+            AILearningExtractor[AI Learning Extractor Tool]
+            
+            ValidationAgent[Advanced Validation Agent]
+            AutoDataValidator[Auto Data Validator Tool]
+            FormatNormalizer[Format Normalizer Tool]
+            
+            ContextualEnrichmentAgent[Contextual Enrichment Agent]
+            BusinessContextEnricher[Business Context Enricher Tool]
+            MetadataEnricher[Metadata Enricher Tool]
+        end
+        
+        subgraph "Advanced Business Rules Engine Cluster"
+            ConditionalRulesAgent[Conditional Rules Agent]
+            ComplexLogicProcessor[Complex Logic Processor Tool]
+            MultiConditionEvaluator[Multi-Condition Evaluator Tool]
+            TemporalConditionChecker[Temporal Condition Checker Tool]
+            ClientProfileCondition[Client Profile Condition Tool]
+            DataConditionChecker[Data Condition Checker Tool]
+            HistoryConditionChecker[History Condition Checker Tool]
+            
+            AutomatedActionsAgent[Automated Actions Agent]
+            DynamicPriorityScorer[Dynamic Priority Scorer Tool]
+            TeamAssignmentEngine[Team Assignment Engine Tool]
+            CaseNumberGenerator[Case Number Generator Tool]
+            AlertNotificationEngine[Alert Notification Engine Tool]
+            CRMAutoUpdater[CRM Auto Updater Tool]
+            WorkflowTrigger[Workflow Trigger Tool]
+            ReminderScheduler[Reminder Scheduler Tool]
+            
+            EscalationManagementAgent[Escalation Management Agent]
+            UrgentCaseDetector[Urgent Case Detector Tool]
+            SLAEscalationEngine[SLA Escalation Engine Tool]
+            NegativeSentimentEscalator[Negative Sentiment Escalator Tool]
+            TechnicalComplexityEscalator[Technical Complexity Escalator Tool]
+            VIPClientEscalator[VIP Client Escalator Tool]
+            MultiChannelNotifier[Multi-Channel Notifier Tool]
+        end
+        
+        subgraph "Intelligent Routing & Queue Management Cluster"
+            IntelligentRoutingAgent[Intelligent Routing Agent]
+            SkillsBasedRouter[Skills-Based Router Tool]
+            AutoLoadBalancer[Auto Load Balancer Tool]
+            RealTimeAvailabilityChecker[Real-Time Availability Checker Tool]
+            GeographicRouter[Geographic Router Tool]
+            LanguageRouter[Language Router Tool]
+            BackupRouter[Backup Router Tool]
+            
+            QueueManagementAgent[Advanced Queue Management Agent]
+            RulePrioritizer[Rule-Based Prioritizer Tool]
+            EquitableDistributor[Equitable Distributor Tool]
+            PeakActivityManager[Peak Activity Manager Tool]
+            SpecializedQueueManager[Specialized Queue Manager Tool]
+            OverflowEscalator[Overflow Escalator Tool]
+            RealTimeQueueStats[Real-Time Queue Stats Tool]
+            
+            QualityValidationAgent[Quality Validation Agent]
+            CompletenessValidator[Completeness Validator Tool]
+            ResponseQualityChecker[Response Quality Checker Tool]
+            ConfigurableApprovalWorkflow[Configurable Approval Workflow Tool]
+            ContinuousImprovementFeedback[Continuous Improvement Feedback Tool]
+            ComprehensiveAuditTrail[Comprehensive Audit Trail Tool]
+            AgentQualityMetrics[Agent Quality Metrics Tool]
+        end
+        
+        subgraph "Advanced Response Generation Cluster"
+            TemplateManagementAgent[Template Management Agent]
+            BusinessTemplateLibrary[Business Template Library Tool]
+            MultiLanguageTemplates[Multi-Language Templates Tool]
+            DynamicVariableEngine[Dynamic Variable Engine Tool]
+            ClientProfilePersonalizer[Client Profile Personalizer Tool]
+            SentimentToneAdapter[Sentiment Tone Adapter Tool]
+            HumanValidationDraftGenerator[Human Validation Draft Generator Tool]
+            
+            ResponseGenerationAgent[Advanced Response Generation Agent]
+            PersonalizedAcknowledgmentGenerator[Personalized Acknowledgment Generator Tool]
+            AutoResponseGenerator[Auto Response Generator Tool]
+            SupplementaryInfoRequester[Supplementary Info Requester Tool]
+            SmartformGenerator[Smartform Generator Tool]
+            PersonalizedLinkGenerator[Personalized Link Generator Tool]
+            CaseClosureGenerator[Case Closure Generator Tool]
+            
+            SmartformSystemAgent[Smartform System Agent]
+            DynamicFormGenerator[Dynamic Form Generator Tool]
+            EmailSMSSender[Email SMS Sender Tool]
+            ResponsiveInterfaceGenerator[Responsive Interface Generator Tool]
+            ClientServerValidator[Client Server Validator Tool]
+            OCRDocumentIntegrator[OCR Document Integrator Tool]
+            CompletionTracker[Completion Tracker Tool]
+            ReminderSystem[Reminder System Tool]
         end
         
         subgraph "Integration & Delivery Cluster"
@@ -469,57 +599,683 @@ graph TB
     DDoSProtection --> SSLTermination
 ```
 
-### Pipeline de Traitement Temps Quasi-Réel
+### Pipeline de Traitement Complet - Temps Quasi-Réel
 
 ```mermaid
 sequenceDiagram
     participant GraphAPI as Microsoft Graph API
-    participant Ingestion as Ingestion Agent
+    participant Dedup as Deduplication Agent
+    participant AntiSpam as Anti-Spam Agent
     participant Security as Security Agent
-    participant Preprocessor as Preprocessor Agent
-    participant Semantic as Semantic Agent
-    participant Extraction as Extraction Agent
-    participant OCR as OCR Agent
-    participant Classification as Classification Agent
-    participant Rules as Business Rules Agent
-    participant Routing as Routing Agent
-    participant Response as Response Agent
+    participant Cleaner as Content Cleaner Agent
+    participant Encoding as Encoding Agent
+    participant Metadata as Metadata Agent
+    participant Classification as Multi-Level Classification Agent
+    participant Semantic as Semantic Intelligence Agent
+    participant NLP as NLP Processing Cluster
+    participant OCR as OCR & Extraction Cluster
+    participant Rules as Business Rules Engine
+    participant Routing as Intelligent Routing Agent
+    participant Queue as Queue Management Agent
+    participant Response as Response Generation Agent
+    participant Smartform as Smartform System Agent
     participant Integration as Integration Agent
     participant External as External Systems
     
-    Note over GraphAPI, External: Target: <2 seconds end-to-end processing
+    Note over GraphAPI, External: Target: <2 seconds end-to-end processing avec approche agentic
     
-    GraphAPI->>+Ingestion: New Email Event (50ms)
-    Ingestion->>+Security: Email + Metadata (100ms)
-    Security-->>Ingestion: Security Validation (200ms)
+    GraphAPI->>+Dedup: New Email Event (30ms)
+    Dedup->>+AntiSpam: Deduplicated Email (40ms)
+    AntiSpam->>+Security: Spam-Free Email (60ms)
+    Security->>+Cleaner: Security Validated (80ms)
     
-    par Parallel Processing
-        Ingestion->>+Preprocessor: Clean Content (150ms)
-        Preprocessor->>+Semantic: Processed Content (200ms)
-        Semantic-->>Preprocessor: Semantic Analysis (300ms)
+    par Parallel Preprocessing
+        Cleaner->>+Encoding: Clean Content (50ms)
+        Encoding->>+Metadata: Normalized Content (40ms)
+        Metadata-->>Encoding: Metadata Extracted (30ms)
     and
-        Ingestion->>+Extraction: Attachments (100ms)
-        Extraction->>+OCR: Images/PDFs (500ms)
-        OCR-->>Extraction: Extracted Text (400ms)
+        Security->>+OCR: Attachments (50ms)
+        OCR-->>Security: Extracted Data (400ms)
     end
     
-    Semantic->>+Classification: Analysis + Extracted Data (100ms)
-    Classification->>+Rules: Apply Business Rules (150ms)
-    Rules-->>Classification: Rule Results (100ms)
-    
-    Classification->>+Routing: Classification Results (50ms)
-    Routing-->>Classification: Routing Decision (100ms)
-    
-    par Response Generation
-        Routing->>+Response: Generate Response (200ms)
-        Response-->>Routing: Generated Response (300ms)
+    par Parallel AI Analysis
+        Metadata->>+Classification: Content + Metadata (60ms)
+        Classification->>+Semantic: Multi-Level Classification (80ms)
+        Semantic-->>Classification: Semantic Analysis (120ms)
     and
-        Routing->>+Integration: Update Systems (150ms)
-        Integration->>+External: API Calls (200ms)
-        External-->>Integration: Confirmation (100ms)
+        Metadata->>+NLP: Content (40ms)
+        NLP-->>Metadata: NLP Results (150ms)
     end
     
-    Note over GraphAPI, External: Total Processing Time: ~1.8 seconds
+    Classification->>+Rules: Classification + NLP Results (50ms)
+    Rules->>+Routing: Business Rules Applied (100ms)
+    Routing->>+Queue: Routing Decision (60ms)
+    Queue-->>Routing: Queue Assignment (40ms)
+    
+    par Response & Integration
+        Routing->>+Response: Generate Response (150ms)
+        Response->>+Smartform: Response Generated (100ms)
+        Smartform-->>Response: Smartform Created (80ms)
+    and
+        Routing->>+Integration: Update Systems (100ms)
+        Integration->>+External: API Calls (150ms)
+        External-->>Integration: Confirmation (80ms)
+    end
+    
+    Note over GraphAPI, External: Total Processing Time: ~1.6 seconds avec optimisations agentic
+```
+
+### Architecture de Preprocessing & Validation Détaillée
+
+```mermaid
+graph TB
+    subgraph "Email Input Stream"
+        EmailInput[Incoming Email]
+        RawContent[Raw Email Content]
+        Attachments[Email Attachments]
+        Headers[Email Headers]
+    end
+    
+    subgraph "Deduplication Agent Cluster"
+        DeduplicationCoordinator[Deduplication Coordinator]
+        HashGenerator[Hash Generator - MD5/SHA256]
+        SimilarityCalculator[Semantic Similarity Calculator]
+        DuplicateDatabase[(Duplicate Detection DB)]
+        
+        DeduplicationCoordinator --> HashGenerator
+        DeduplicationCoordinator --> SimilarityCalculator
+        HashGenerator --> DuplicateDatabase
+        SimilarityCalculator --> DuplicateDatabase
+    end
+    
+    subgraph "Anti-Spam Agent Cluster"
+        AntiSpamCoordinator[Anti-Spam Coordinator]
+        BayesianClassifier[Bayesian Spam Classifier]
+        BlacklistValidator[Blacklist Validator]
+        BehaviorAnalyzer[Behavior Pattern Analyzer]
+        ReputationChecker[Sender Reputation Checker]
+        SpamScoreCalculator[Spam Score Calculator]
+        
+        AntiSpamCoordinator --> BayesianClassifier
+        AntiSpamCoordinator --> BlacklistValidator
+        AntiSpamCoordinator --> BehaviorAnalyzer
+        AntiSpamCoordinator --> ReputationChecker
+        BayesianClassifier --> SpamScoreCalculator
+        BlacklistValidator --> SpamScoreCalculator
+        BehaviorAnalyzer --> SpamScoreCalculator
+        ReputationChecker --> SpamScoreCalculator
+    end
+    
+    subgraph "Security Validation Agent Cluster"
+        SecurityCoordinator[Security Validation Coordinator]
+        DKIMValidator[DKIM Signature Validator]
+        SPFChecker[SPF Record Checker]
+        DMARCValidator[DMARC Policy Validator]
+        CertificateValidator[Certificate Validator]
+        PhishingDetector[Phishing Pattern Detector]
+        MalwareScanner[Malware Scanner]
+        SecurityScorer[Security Score Calculator]
+        
+        SecurityCoordinator --> DKIMValidator
+        SecurityCoordinator --> SPFChecker
+        SecurityCoordinator --> DMARCValidator
+        SecurityCoordinator --> CertificateValidator
+        SecurityCoordinator --> PhishingDetector
+        SecurityCoordinator --> MalwareScanner
+        DKIMValidator --> SecurityScorer
+        SPFChecker --> SecurityScorer
+        DMARCValidator --> SecurityScorer
+        PhishingDetector --> SecurityScorer
+        MalwareScanner --> SecurityScorer
+    end
+    
+    subgraph "Content Cleaning Agent Cluster"
+        ContentCleanerCoordinator[Content Cleaner Coordinator]
+        HTMLStripper[HTML Tag Stripper]
+        TextNormalizer[Text Normalizer]
+        StructurePreserver[Semantic Structure Preserver]
+        FormattingCleaner[Formatting Cleaner]
+        LinkExtractor[Link Extractor & Validator]
+        
+        ContentCleanerCoordinator --> HTMLStripper
+        ContentCleanerCoordinator --> TextNormalizer
+        ContentCleanerCoordinator --> StructurePreserver
+        ContentCleanerCoordinator --> FormattingCleaner
+        ContentCleanerCoordinator --> LinkExtractor
+    end
+    
+    subgraph "Encoding Normalization Agent Cluster"
+        EncodingCoordinator[Encoding Coordinator]
+        EncodingDetector[Auto Encoding Detector]
+        CharsetConverter[Charset Converter]
+        UTF8Normalizer[UTF-8 Normalizer]
+        SpecialCharHandler[Special Character Handler]
+        
+        EncodingCoordinator --> EncodingDetector
+        EncodingCoordinator --> CharsetConverter
+        EncodingCoordinator --> UTF8Normalizer
+        EncodingCoordinator --> SpecialCharHandler
+    end
+    
+    subgraph "Metadata Extraction Agent Cluster"
+        MetadataCoordinator[Metadata Extraction Coordinator]
+        HeaderParser[Email Header Parser]
+        SenderAnalyzer[Sender Information Analyzer]
+        RecipientAnalyzer[Recipient Information Analyzer]
+        TimestampExtractor[Timestamp Extractor]
+        ThreadAnalyzer[Email Thread Analyzer]
+        AttachmentAnalyzer[Attachment Metadata Analyzer]
+        SizeCalculator[Email Size Calculator]
+        
+        MetadataCoordinator --> HeaderParser
+        MetadataCoordinator --> SenderAnalyzer
+        MetadataCoordinator --> RecipientAnalyzer
+        MetadataCoordinator --> TimestampExtractor
+        MetadataCoordinator --> ThreadAnalyzer
+        MetadataCoordinator --> AttachmentAnalyzer
+        MetadataCoordinator --> SizeCalculator
+    end
+    
+    %% Flow Connections
+    EmailInput --> DeduplicationCoordinator
+    RawContent --> DeduplicationCoordinator
+    Headers --> DeduplicationCoordinator
+    
+    DeduplicationCoordinator --> AntiSpamCoordinator
+    AntiSpamCoordinator --> SecurityCoordinator
+    SecurityCoordinator --> ContentCleanerCoordinator
+    ContentCleanerCoordinator --> EncodingCoordinator
+    EncodingCoordinator --> MetadataCoordinator
+    
+    Attachments --> MetadataCoordinator
+```
+
+### Architecture de Classification & Analyse Intelligente Multi-Niveaux
+
+```mermaid
+graph TB
+    subgraph "Input Processing"
+        ProcessedEmail[Processed Email Content]
+        ExtractedMetadata[Extracted Metadata]
+        CleanedAttachments[Cleaned Attachments]
+    end
+    
+    subgraph "Multi-Level Classification Agent Cluster"
+        ClassificationCoordinator[Classification Coordinator]
+        
+        subgraph "Intent Classification Sub-Cluster"
+            IntentClassifier[Intent Classification Agent]
+            InfoRequestDetector[Info Request Detector]
+            ComplaintDetector[Complaint Detector]
+            CancellationDetector[Cancellation Detector]
+            OrderDetector[Order Intent Detector]
+            TechnicalSupportDetector[Technical Support Detector]
+            IntentConfidenceScorer[Intent Confidence Scorer]
+        end
+        
+        subgraph "Business Category Sub-Cluster"
+            BusinessCategorizer[Business Category Agent]
+            BankingClassifier[Banking Classifier]
+            InsuranceClassifier[Insurance Classifier]
+            HRClassifier[HR Classifier]
+            EcommerceClassifier[E-commerce Classifier]
+            TelecomClassifier[Telecom Classifier]
+            CategoryConfidenceScorer[Category Confidence Scorer]
+        end
+        
+        subgraph "Priority Classification Sub-Cluster"
+            PriorityAgent[Priority Classification Agent]
+            UrgentKeywordDetector[Urgent Keyword Detector]
+            VIPSenderDetector[VIP Sender Detector]
+            SLAAnalyzer[SLA Impact Analyzer]
+            PriorityScoreCalculator[Priority Score Calculator]
+        end
+        
+        subgraph "Complexity Assessment Sub-Cluster"
+            ComplexityAgent[Complexity Assessment Agent]
+            EntityCountAnalyzer[Entity Count Analyzer]
+            TopicMultiplicityDetector[Topic Multiplicity Detector]
+            CrossReferenceDetector[Cross Reference Detector]
+            ComplexityScoreCalculator[Complexity Score Calculator]
+        end
+        
+        subgraph "Request Type Detection Sub-Cluster"
+            RequestTypeAgent[Request Type Agent]
+            NewRequestDetector[New Request Detector]
+            FollowUpDetector[Follow-Up Detector]
+            EscalationDetector[Escalation Detector]
+            RecurrenceDetector[Recurrence Detector]
+        end
+    end
+    
+    subgraph "Semantic Intelligence Agent Cluster"
+        SemanticCoordinator[Semantic Intelligence Coordinator]
+        
+        subgraph "Contextual Understanding Sub-Cluster"
+            ContextualAnalyzer[Contextual Understanding Agent]
+            RealTimeContextProcessor[Real-Time Context Processor]
+            HistoricalContextAnalyzer[Historical Context Analyzer]
+            BusinessContextExtractor[Business Context Extractor]
+        end
+        
+        subgraph "Sentiment & Emotion Sub-Cluster"
+            SentimentAgent[Sentiment Analysis Agent]
+            PositiveSentimentDetector[Positive Sentiment Detector]
+            NegativeSentimentDetector[Negative Sentiment Detector]
+            NeutralSentimentDetector[Neutral Sentiment Detector]
+            
+            EmotionAgent[Emotion Detection Agent]
+            AngerDetector[Anger Detector]
+            SatisfactionDetector[Satisfaction Detector]
+            FrustrationDetector[Frustration Detector]
+            EmotionalIntensityCalculator[Emotional Intensity Calculator]
+        end
+        
+        subgraph "Advanced Intent Analysis Sub-Cluster"
+            HiddenIntentAgent[Hidden Intent Detection Agent]
+            ImplicitUrgencyAgent[Implicit Urgency Agent]
+            CommercialOpportunityAgent[Commercial Opportunity Agent]
+            EmotionalLoadAgent[Emotional Load Analysis Agent]
+        end
+    end
+    
+    subgraph "Output Consolidation"
+        ClassificationResults[Consolidated Classification Results]
+        SemanticAnalysisResults[Semantic Analysis Results]
+        ConfidenceScores[Overall Confidence Scores]
+        RecommendedActions[Recommended Actions]
+    end
+    
+    %% Flow Connections
+    ProcessedEmail --> ClassificationCoordinator
+    ExtractedMetadata --> ClassificationCoordinator
+    CleanedAttachments --> ClassificationCoordinator
+    
+    ClassificationCoordinator --> IntentClassifier
+    ClassificationCoordinator --> BusinessCategorizer
+    ClassificationCoordinator --> PriorityAgent
+    ClassificationCoordinator --> ComplexityAgent
+    ClassificationCoordinator --> RequestTypeAgent
+    
+    ProcessedEmail --> SemanticCoordinator
+    ExtractedMetadata --> SemanticCoordinator
+    
+    SemanticCoordinator --> ContextualAnalyzer
+    SemanticCoordinator --> SentimentAgent
+    SemanticCoordinator --> EmotionAgent
+    SemanticCoordinator --> HiddenIntentAgent
+    SemanticCoordinator --> ImplicitUrgencyAgent
+    SemanticCoordinator --> CommercialOpportunityAgent
+    SemanticCoordinator --> EmotionalLoadAgent
+    
+    %% Sub-cluster connections
+    IntentClassifier --> InfoRequestDetector
+    IntentClassifier --> ComplaintDetector
+    IntentClassifier --> CancellationDetector
+    IntentClassifier --> OrderDetector
+    IntentClassifier --> TechnicalSupportDetector
+    InfoRequestDetector --> IntentConfidenceScorer
+    ComplaintDetector --> IntentConfidenceScorer
+    CancellationDetector --> IntentConfidenceScorer
+    
+    BusinessCategorizer --> BankingClassifier
+    BusinessCategorizer --> InsuranceClassifier
+    BusinessCategorizer --> HRClassifier
+    BusinessCategorizer --> EcommerceClassifier
+    BusinessCategorizer --> TelecomClassifier
+    BankingClassifier --> CategoryConfidenceScorer
+    InsuranceClassifier --> CategoryConfidenceScorer
+    
+    PriorityAgent --> UrgentKeywordDetector
+    PriorityAgent --> VIPSenderDetector
+    PriorityAgent --> SLAAnalyzer
+    UrgentKeywordDetector --> PriorityScoreCalculator
+    VIPSenderDetector --> PriorityScoreCalculator
+    SLAAnalyzer --> PriorityScoreCalculator
+    
+    %% Output connections
+    IntentConfidenceScorer --> ClassificationResults
+    CategoryConfidenceScorer --> ClassificationResults
+    PriorityScoreCalculator --> ClassificationResults
+    ComplexityScoreCalculator --> ClassificationResults
+    
+    ContextualAnalyzer --> SemanticAnalysisResults
+    SentimentAgent --> SemanticAnalysisResults
+    EmotionAgent --> SemanticAnalysisResults
+    HiddenIntentAgent --> SemanticAnalysisResults
+    
+    ClassificationResults --> ConfidenceScores
+    SemanticAnalysisResults --> ConfidenceScores
+    ConfidenceScores --> RecommendedActions
+```
+
+### Architecture NLP Avancé & Extraction de Données Ultra-Performante
+
+```mermaid
+graph TB
+    subgraph "Advanced NLP Processing Cluster"
+        NLPCoordinator[NLP Processing Coordinator]
+        
+        subgraph "Advanced Tokenization Sub-Cluster"
+            TokenizationAgent[Advanced Tokenization Agent]
+            OrthographicToleranceEngine[Orthographic Tolerance Engine]
+            VariantHandler[Linguistic Variant Handler]
+            ContextualTokenizer[Contextual Tokenizer]
+            TokenConfidenceScorer[Token Confidence Scorer]
+        end
+        
+        subgraph "Phonetic Processing Sub-Cluster"
+            PhoneticAgent[Phonetic Processing Agent]
+            RegionalSynonymProcessor[Regional Synonym Processor]
+            BusinessAbbreviationHandler[Business Abbreviation Handler]
+            PhoneticMatcher[Phonetic Matching Engine]
+            VariantNormalizer[Variant Normalizer]
+        end
+        
+        subgraph "Semantic Indexing Sub-Cluster"
+            SemanticIndexingAgent[Semantic Indexing Agent]
+            VectorEmbeddingGenerator[Vector Embedding Generator]
+            SemanticSearchEngine[Semantic Search Engine]
+            ConceptualIndexer[Conceptual Indexer]
+            RelationshipMapper[Relationship Mapper]
+        end
+        
+        subgraph "Advanced Entity Recognition Sub-Cluster"
+            EntityCoordinator[Entity Recognition Coordinator]
+            PersonEntityAgent[Person Entity Agent]
+            LocationEntityAgent[Location Entity Agent]
+            OrganizationEntityAgent[Organization Entity Agent]
+            DateTimeEntityAgent[DateTime Entity Agent]
+            MoneyEntityAgent[Money Entity Agent]
+            EntityRelationshipAnalyzer[Entity Relationship Analyzer]
+        end
+        
+        subgraph "Client Reference Detection Sub-Cluster"
+            ClientReferenceAgent[Client Reference Agent]
+            ClientNumberDetector[Client Number Detector]
+            ContractReferenceDetector[Contract Reference Detector]
+            OrderReferenceDetector[Order Reference Detector]
+            CaseReferenceDetector[Case Reference Detector]
+            ReferenceValidator[Reference Validator]
+        end
+        
+        subgraph "Advanced Normalization Sub-Cluster"
+            NormalizationAgent[Advanced Normalization Agent]
+            SynonymNormalizer[Synonym Normalizer]
+            AbbreviationExpander[Abbreviation Expander]
+            RegionalExpressionNormalizer[Regional Expression Normalizer]
+            BusinessTermNormalizer[Business Term Normalizer]
+        end
+    end
+    
+    subgraph "Ultra-Performant OCR & Data Extraction Cluster"
+        ExtractionCoordinator[Data Extraction Coordinator]
+        
+        subgraph "Attachment Processing Sub-Cluster"
+            AttachmentAgent[Attachment Processing Agent]
+            MultiFormatProcessor[Multi-Format Processor]
+            ContrastOptimizer[Contrast Optimizer]
+            OrientationCorrector[Orientation Corrector]
+            QualityEnhancer[Image Quality Enhancer]
+        end
+        
+        subgraph "Intelligent Filtering Sub-Cluster"
+            FilteringAgent[Intelligent Filtering Agent]
+            FalseAttachmentDetector[False Attachment Detector]
+            LogoSignatureFilter[Logo/Signature Filter]
+            DecorativeImageFilter[Decorative Image Filter]
+            RelevanceScorer[Content Relevance Scorer]
+        end
+        
+        subgraph "Document Type Recognition Sub-Cluster"
+            DocumentTypeAgent[Document Type Recognition Agent]
+            FormClassifier[Administrative Form Classifier]
+            InvoiceClassifier[Invoice Classifier]
+            ReportClassifier[Report Classifier]
+            DeclarationClassifier[Declaration Classifier]
+            JustificationClassifier[Justification Classifier]
+            IdentityDocClassifier[Identity Document Classifier]
+            FinancialDocClassifier[Financial Document Classifier]
+            ContractClassifier[Contract Classifier]
+        end
+        
+        subgraph "Structured Data Extraction Sub-Cluster"
+            StructuredExtractionAgent[Structured Extraction Agent]
+            RegexPatternEngine[Regex Pattern Engine]
+            TemplateMatchingEngine[Template Matching Engine]
+            AILearningExtractor[AI Learning Extractor]
+            FieldExtractor[Field Extractor]
+            TableExtractor[Table Extractor]
+        end
+        
+        subgraph "Validation & Enrichment Sub-Cluster"
+            ValidationAgent[Advanced Validation Agent]
+            DataFormatValidator[Data Format Validator]
+            BusinessRuleValidator[Business Rule Validator]
+            QualityAssessment[Quality Assessment Engine]
+            
+            EnrichmentAgent[Contextual Enrichment Agent]
+            BusinessContextEnricher[Business Context Enricher]
+            MetadataEnricher[Metadata Enricher]
+            CrossReferenceEnricher[Cross-Reference Enricher]
+        end
+    end
+    
+    %% Flow connections
+    NLPCoordinator --> TokenizationAgent
+    NLPCoordinator --> PhoneticAgent
+    NLPCoordinator --> SemanticIndexingAgent
+    NLPCoordinator --> EntityCoordinator
+    NLPCoordinator --> ClientReferenceAgent
+    NLPCoordinator --> NormalizationAgent
+    
+    ExtractionCoordinator --> AttachmentAgent
+    ExtractionCoordinator --> FilteringAgent
+    ExtractionCoordinator --> DocumentTypeAgent
+    ExtractionCoordinator --> StructuredExtractionAgent
+    ExtractionCoordinator --> ValidationAgent
+    ExtractionCoordinator --> EnrichmentAgent
+    
+    %% Sub-cluster internal connections
+    TokenizationAgent --> OrthographicToleranceEngine
+    TokenizationAgent --> VariantHandler
+    TokenizationAgent --> ContextualTokenizer
+    OrthographicToleranceEngine --> TokenConfidenceScorer
+    
+    PhoneticAgent --> RegionalSynonymProcessor
+    PhoneticAgent --> BusinessAbbreviationHandler
+    PhoneticAgent --> PhoneticMatcher
+    RegionalSynonymProcessor --> VariantNormalizer
+    
+    EntityCoordinator --> PersonEntityAgent
+    EntityCoordinator --> LocationEntityAgent
+    EntityCoordinator --> OrganizationEntityAgent
+    EntityCoordinator --> DateTimeEntityAgent
+    EntityCoordinator --> MoneyEntityAgent
+    PersonEntityAgent --> EntityRelationshipAnalyzer
+    LocationEntityAgent --> EntityRelationshipAnalyzer
+    
+    DocumentTypeAgent --> FormClassifier
+    DocumentTypeAgent --> InvoiceClassifier
+    DocumentTypeAgent --> ReportClassifier
+    DocumentTypeAgent --> DeclarationClassifier
+    
+    StructuredExtractionAgent --> RegexPatternEngine
+    StructuredExtractionAgent --> TemplateMatchingEngine
+    StructuredExtractionAgent --> AILearningExtractor
+    RegexPatternEngine --> FieldExtractor
+    TemplateMatchingEngine --> TableExtractor
+```
+
+### Architecture Moteur de Règles Métier & Génération de Réponses
+
+```mermaid
+graph TB
+    subgraph "Advanced Business Rules Engine Cluster"
+        RulesCoordinator[Business Rules Coordinator]
+        
+        subgraph "Conditional Rules Sub-Cluster"
+            ConditionalRulesAgent[Conditional Rules Agent]
+            ComplexLogicProcessor[Complex Logic Processor]
+            MultiConditionEvaluator[Multi-Condition Evaluator]
+            TemporalConditionEngine[Temporal Condition Engine]
+            ClientProfileConditionEngine[Client Profile Condition Engine]
+            DataConditionEngine[Data Condition Engine]
+            HistoryConditionEngine[History Condition Engine]
+            LogicalOperatorProcessor[Logical Operator Processor]
+        end
+        
+        subgraph "Automated Actions Sub-Cluster"
+            AutomatedActionsAgent[Automated Actions Agent]
+            DynamicPriorityEngine[Dynamic Priority Engine]
+            TeamAssignmentEngine[Team Assignment Engine]
+            CaseNumberGenerator[Case Number Generator]
+            AlertNotificationEngine[Alert Notification Engine]
+            CRMAutoUpdater[CRM Auto Updater]
+            WorkflowTriggerEngine[Workflow Trigger Engine]
+            ReminderSchedulingEngine[Reminder Scheduling Engine]
+        end
+        
+        subgraph "Escalation Management Sub-Cluster"
+            EscalationAgent[Escalation Management Agent]
+            UrgentCaseDetector[Urgent Case Detector]
+            SLAEscalationEngine[SLA Escalation Engine]
+            NegativeSentimentEscalator[Negative Sentiment Escalator]
+            TechnicalComplexityEscalator[Technical Complexity Escalator]
+            VIPClientEscalator[VIP Client Escalator]
+            MultiChannelNotificationEngine[Multi-Channel Notification Engine]
+        end
+    end
+    
+    subgraph "Advanced Response Generation Cluster"
+        ResponseCoordinator[Response Generation Coordinator]
+        
+        subgraph "Template Management Sub-Cluster"
+            TemplateManagementAgent[Template Management Agent]
+            BusinessTemplateLibrary[Business Template Library]
+            MultiLanguageTemplateEngine[Multi-Language Template Engine]
+            DynamicVariableProcessor[Dynamic Variable Processor]
+            ClientProfilePersonalizer[Client Profile Personalizer]
+            SentimentToneAdapter[Sentiment Tone Adapter]
+            HumanValidationDraftGenerator[Human Validation Draft Generator]
+        end
+        
+        subgraph "Response Generation Sub-Cluster"
+            ResponseGenerationAgent[Response Generation Agent]
+            PersonalizedAcknowledgmentGenerator[Personalized Acknowledgment Generator]
+            AutoResponseGenerator[Auto Response Generator]
+            SupplementaryInfoRequester[Supplementary Info Requester]
+            PersonalizedLinkGenerator[Personalized Link Generator]
+            CaseClosureGenerator[Case Closure Generator]
+        end
+        
+        subgraph "Smartform System Sub-Cluster"
+            SmartformAgent[Smartform System Agent]
+            DynamicFormGenerator[Dynamic Form Generator]
+            ResponsiveInterfaceBuilder[Responsive Interface Builder]
+            ClientServerValidator[Client Server Validator]
+            OCRDocumentIntegrator[OCR Document Integrator]
+            CompletionTracker[Completion Tracker]
+            ReminderSystem[Reminder System]
+            EmailSMSSender[Email SMS Sender]
+        end
+        
+        subgraph "Quality Control Sub-Cluster"
+            QualityControlAgent[Quality Control Agent]
+            ContentValidator[Content Validator]
+            ComplianceChecker[Compliance Checker]
+            GrammarChecker[Grammar Checker]
+            ToneConsistencyChecker[Tone Consistency Checker]
+            BrandGuidelineValidator[Brand Guideline Validator]
+        end
+    end
+    
+    subgraph "Routing & Queue Management Cluster"
+        RoutingCoordinator[Routing & Queue Coordinator]
+        
+        subgraph "Intelligent Routing Sub-Cluster"
+            IntelligentRoutingAgent[Intelligent Routing Agent]
+            SkillsBasedRouter[Skills-Based Router]
+            AutoLoadBalancer[Auto Load Balancer]
+            RealTimeAvailabilityChecker[Real-Time Availability Checker]
+            GeographicRouter[Geographic Router]
+            LanguageRouter[Language Router]
+            BackupRoutingEngine[Backup Routing Engine]
+        end
+        
+        subgraph "Queue Management Sub-Cluster"
+            QueueManagementAgent[Queue Management Agent]
+            RuleBasedPrioritizer[Rule-Based Prioritizer]
+            EquitableDistributor[Equitable Distributor]
+            PeakActivityManager[Peak Activity Manager]
+            SpecializedQueueManager[Specialized Queue Manager]
+            OverflowEscalator[Overflow Escalator]
+            RealTimeQueueAnalytics[Real-Time Queue Analytics]
+        end
+        
+        subgraph "Quality Validation Sub-Cluster"
+            QualityValidationAgent[Quality Validation Agent]
+            CompletenessValidator[Completeness Validator]
+            ResponseQualityChecker[Response Quality Checker]
+            ApprovalWorkflowEngine[Approval Workflow Engine]
+            ContinuousImprovementEngine[Continuous Improvement Engine]
+            AuditTrailManager[Audit Trail Manager]
+            AgentQualityMetrics[Agent Quality Metrics]
+        end
+    end
+    
+    %% Flow connections
+    RulesCoordinator --> ConditionalRulesAgent
+    RulesCoordinator --> AutomatedActionsAgent
+    RulesCoordinator --> EscalationAgent
+    
+    ResponseCoordinator --> TemplateManagementAgent
+    ResponseCoordinator --> ResponseGenerationAgent
+    ResponseCoordinator --> SmartformAgent
+    ResponseCoordinator --> QualityControlAgent
+    
+    RoutingCoordinator --> IntelligentRoutingAgent
+    RoutingCoordinator --> QueueManagementAgent
+    RoutingCoordinator --> QualityValidationAgent
+    
+    %% Internal sub-cluster connections
+    ConditionalRulesAgent --> ComplexLogicProcessor
+    ConditionalRulesAgent --> MultiConditionEvaluator
+    ConditionalRulesAgent --> TemporalConditionEngine
+    ConditionalRulesAgent --> ClientProfileConditionEngine
+    ConditionalRulesAgent --> LogicalOperatorProcessor
+    
+    AutomatedActionsAgent --> DynamicPriorityEngine
+    AutomatedActionsAgent --> TeamAssignmentEngine
+    AutomatedActionsAgent --> CaseNumberGenerator
+    AutomatedActionsAgent --> AlertNotificationEngine
+    AutomatedActionsAgent --> CRMAutoUpdater
+    
+    EscalationAgent --> UrgentCaseDetector
+    EscalationAgent --> SLAEscalationEngine
+    EscalationAgent --> NegativeSentimentEscalator
+    EscalationAgent --> VIPClientEscalator
+    EscalationAgent --> MultiChannelNotificationEngine
+    
+    TemplateManagementAgent --> BusinessTemplateLibrary
+    TemplateManagementAgent --> MultiLanguageTemplateEngine
+    TemplateManagementAgent --> DynamicVariableProcessor
+    TemplateManagementAgent --> SentimentToneAdapter
+    
+    SmartformAgent --> DynamicFormGenerator
+    SmartformAgent --> ResponsiveInterfaceBuilder
+    SmartformAgent --> CompletionTracker
+    SmartformAgent --> EmailSMSSender
+    
+    IntelligentRoutingAgent --> SkillsBasedRouter
+    IntelligentRoutingAgent --> AutoLoadBalancer
+    IntelligentRoutingAgent --> GeographicRouter
+    IntelligentRoutingAgent --> BackupRoutingEngine
+    
+    QueueManagementAgent --> RuleBasedPrioritizer
+    QueueManagementAgent --> EquitableDistributor
+    QueueManagementAgent --> SpecializedQueueManager
+    QueueManagementAgent --> RealTimeQueueAnalytics
 ```
 
 ### Orchestration des Agents IA - Décomposition des Tâches
